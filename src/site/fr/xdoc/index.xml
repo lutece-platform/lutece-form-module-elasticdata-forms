@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <properties>
+        <title>Module elasticdata forms</title>
+    </properties>
+    <body>
+        <section name="Module elasticdata forms">
+            <p>
+                <img src="images/elastic.png" />
+            </p>
+            <subsection name="Introduction">
+                <p>Module de production de donn&amp;eacute;es de Forms pour ElasticSearch / Kibana</p>
+            </subsection>
+        </section>
+    </body>
+</document>
+

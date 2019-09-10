@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <body>
+        <links>
+            <item name="EN" href="../index.html" />
+        </links>
+        <menu name="Module Elasticdata forms">
+            <item name="Accueil" href="index.html"/>
+        </menu>
+        <menu name="Téléchargements" inherit="bottom">
+            <item name="Versions stables" href="../../../stable_builds/plugins/module-elasticdata-forms/"/>
+            <item name="Nightly builds" href="../../../nightly_builds/plugins/module-elasticdata-forms/" />
+        </menu>
+        <menu ref="reports" />
+    </body>
+</project>
