@@ -64,13 +64,13 @@ public class FormsDataSource extends AbstractDataSource
         for ( Form form : listForms )
         {
             List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
-            for ( FormResponse formResponse : listFormResponses )
-            {
+            listFormResponses.parallelStream( ).forEach( formResponse -> {
                 if ( !formResponse.isFromSave( ) )
                 {
                     collResult.add( create( formResponse, form ) );
                 }
             }
+            );
         }
         return collResult;
     }
@@ -119,6 +119,9 @@ public class FormsDataSource extends AbstractDataSource
         Form form = FormHome.findByPrimaryKey( formResponse.getFormId( ) );
         try
         {
+            // Force init data sources of ElasticData plugin
+            DataSourceService.getDataSources();
+
             DataSource source = DataSourceService.getDataSource( "FormsDataSource" );
             FormResponseDataObject formResponseDataObject = create( formResponse, form );
             DataSourceService.processIncrementalIndexing( source, formResponseDataObject );
@@ -126,6 +129,10 @@ public class FormsDataSource extends AbstractDataSource
         catch( ElasticClientException e )
         {
             AppLogService.error( "Unable to process incremental indexing of idRessource :" + nIdResource, e );
+        }
+        catch( NullPointerException e )
+        {
+            AppLogService.error( "Unable to get DataSource :" + nIdResource, e );
         }
     }
 
