@@ -61,7 +61,7 @@ public class FormResponseDataObject extends AbstractDataObject
     /**
      * Sets the Form response id
      * 
-     * @param nId
+     * @param strId
      *            The Form response id
      */
     public void setId( String strId )
@@ -124,7 +124,7 @@ public class FormResponseDataObject extends AbstractDataObject
     /**
      * Sets the Duration
      * 
-     * @param strName
+     * @param lTaskDuration
      *            The Duration
      */
     public void setTaskDuration( long lTaskDuration )

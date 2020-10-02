@@ -139,9 +139,9 @@ public class FormsDataSource extends AbstractDataSource
     /**
      * return The duration in days
      * 
-     * @param currentTime
+     * @param start
      *            The younger time.
-     * @param oldTime
+     * @param end
      *            The older time.
      * @return The duration in days
      */
