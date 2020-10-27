@@ -2,24 +2,23 @@
 <beans xmlns="http://www.springframework.org/schema/beans" 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
   <bean id="elasticdata-forms.FormResponseIndexerEventListener" class="fr.paris.lutece.plugins.elasticdata.modules.forms.service.listener.FormResponseIndexerEventListener" />
+  <bean id="elasticdata-forms.optionalQuestionIndexationDAO" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexationDAO"/>
   <bean id="elasticdata-forms.formsDataSource" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormsDataSource">
     <property name="id" value="FormsDataSource" />
     <property name="name" value="Base de réponse(s) de formulaire(s)." />
-    <property name="targetIndexName" value="formsdatasource" />
-    <property name="dataType" value="formResponseDataObject" />
+    <property name="targetIndexName" value="dev_formsdatasource" />
+    <property name="dataType" value="_doc" />
     <property name="mappings">
       <value><![CDATA[
                       {
                       "mappings": {
-                          "formResponseDataObject": {
                             "properties": {
                               "timestamp": {
-                                "format": "epoch_millis",
-                                "type": "date"
+                                "type":   "date",
+                                "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
                               }
                             }
                           }
-                        }
                       }
                       ]]>
       </value>

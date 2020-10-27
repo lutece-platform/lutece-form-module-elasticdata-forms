@@ -1,0 +1,31 @@
+<@box>
+    <@boxHeader title='${form.title} - #i18n{module.elasticdata.forms.modify_form.title}' boxTools=false>
+    </@boxHeader>
+    <@boxBody>
+        <@messages infos=infos />
+        <@tform name='create_localuser' action='jsp/admin/plugins/elasticdata/modules/forms/IndexingAppElasticData.jsp'>
+            <@input type="hidden" id="idForm" name="idForm" value="${form.id}" />
+            <#list form_step_question_list as step, questionList>
+                <@formGroup labelKey='${step.title}'>
+                    <#list questionList as question>
+                        <#assign checkedValue=getCheckedValue( question.id )>
+                            <@btnGroupRadioCheckbox type='checkbox' color='default' name='${question.id}'
+                                id='${question.id}' value='${question.id}' labelParams='' labelFor='${question.id}'
+                                labelKey=' ${question.title}' checked=checkedValue />
+                    </#list>
+                </@formGroup>
+            </#list>
+            <@actionButtons button1Name="action_modifyFormIndexation" button2Name="view_manageFormsIndexation" />
+        </@tform>
+    </@boxBody>
+</@box>
+<#function getCheckedValue questionId>
+    <#if optional_question_indexation_list?has_content>
+        <#list optional_question_indexation_list as optionalQuestion>
+            <#if optionalQuestion.idQuestion=questionId>
+                <#return true>
+            </#if>
+        </#list>
+    </#if>
+    <#return false>
+</#function>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><plug-in>
+<?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>elasticdata-forms</name>
     <class>fr.paris.lutece.plugins.elasticdata.modules.forms.service.ElasticDataFormsPlugin</class>
     <version>1.0.2-SNAPSHOT</version>

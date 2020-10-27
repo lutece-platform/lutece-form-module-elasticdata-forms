@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019, Mairie de Paris
+ * Copyright (c) 2002-2020, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,17 +39,26 @@ import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormHome;
+import fr.paris.lutece.plugins.forms.business.FormQuestionResponse;
+import fr.paris.lutece.plugins.forms.business.FormQuestionResponseHome;
 import fr.paris.lutece.plugins.forms.business.FormResponse;
 import fr.paris.lutece.plugins.forms.business.FormResponseHome;
+import fr.paris.lutece.plugins.forms.business.Question;
+import fr.paris.lutece.plugins.forms.business.QuestionHome;
+import fr.paris.lutece.plugins.genericattributes.business.Response;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import net.sf.json.JSONObject;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceHistoryService;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * FormsDataSource
@@ -69,10 +78,46 @@ public class FormsDataSource extends AbstractDataSource
                 {
                     collResult.add( create( formResponse, form ) );
                 }
-            }
-            );
+            } );
         }
         return collResult;
+    }
+
+    @Override
+    public String getMappings( )
+    {
+        List<Form> forms = FormHome.getFormList( );
+        JSONObject fields = new JSONObject( );
+
+        for ( Form form : forms )
+        {
+
+            List<OptionalQuestionIndexation> optionalQuestionIndexations = OptionalQuestionIndexationHome
+                    .getOptionalQuestionIndexationListByFormId( form.getId( ) );
+            for ( OptionalQuestionIndexation optionalQuestionIndexation : optionalQuestionIndexations )
+            {
+                Question question = QuestionHome.findByPrimaryKey( optionalQuestionIndexation.getIdQuestion( ) );
+                String entryTypeBeanName = question.getEntry( ).getEntryType( ).getBeanName( );
+                JSONObject fieldMapping = getFieldMappingFromBeanName( entryTypeBeanName );
+
+                if ( fieldMapping != null )
+                {
+                    fields.put( question.getTitle( ), fieldMapping );
+                }
+
+            }
+
+        }
+
+        fields.put( "timestamp", getFieldMappingFromBeanName( "entryTypeDate" ) );
+
+        JSONObject properties = new JSONObject( );
+        properties.put( "properties", fields );
+
+        JSONObject mappings = new JSONObject( );
+        mappings.put( "mappings", properties );
+
+        return mappings.toString( );
     }
 
     /**
@@ -88,19 +133,22 @@ public class FormsDataSource extends AbstractDataSource
     {
         IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
         String stateFormResponse = null;
+        int formResponseId = formResponse.getId( );
+        int formId = formResponse.getFormId( );
+        Timestamp formResponseCreation = formResponse.getCreation( );
         FormResponseDataObject formResponseDataObject = new FormResponseDataObject( );
-        formResponseDataObject.setId( String.valueOf( formResponse.getId( ) ) );
+        formResponseDataObject.setId( String.valueOf( formResponseId ) );
         formResponseDataObject.setFormName( form.getTitle( ) );
         formResponseDataObject.setFormId( form.getId( ) );
-        formResponseDataObject.setTimestamp( formResponse.getCreation( ).getTime( ) );
-        ResourceHistory resourceHist = _resourceHistoryService
-                .getLastHistoryResource( formResponse.getId( ), FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
+        formResponseDataObject.setTimestamp( formResponseCreation.getTime( ) );
+        ResourceHistory resourceHist = _resourceHistoryService.getLastHistoryResource( formResponseId, FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
         if ( resourceHist != null )
         {
             stateFormResponse = resourceHist.getAction( ).getName( );
-            long duration = compareTwoTimeStamps( formResponse.getCreation( ), resourceHist.getCreationDate( ) );
+            long duration = duration( formResponseCreation, resourceHist.getCreationDate( ) );
             formResponseDataObject.setTaskDuration( duration );
         }
+        formResponseDataObject.setUserResponses( getFormQuestionResponseListToIndex( formResponseId, formId ) );
         formResponseDataObject.setWorkflowState( stateFormResponse );
         return formResponseDataObject;
     }
@@ -120,8 +168,7 @@ public class FormsDataSource extends AbstractDataSource
         try
         {
             // Force init data sources of ElasticData plugin
-            DataSourceService.getDataSources();
-
+            DataSourceService.getDataSources( );
             DataSource source = DataSourceService.getDataSource( "FormsDataSource" );
             FormResponseDataObject formResponseDataObject = create( formResponse, form );
             DataSourceService.processIncrementalIndexing( source, formResponseDataObject );
@@ -137,15 +184,85 @@ public class FormsDataSource extends AbstractDataSource
     }
 
     /**
+     * Find form question response list
+     * 
+     * @param nIdFormResponse
+     *            The FormResponse id
+     * @param nIdForm
+     *            The Form id
+     * @return user
+     */
+    private Map<String, String> getFormQuestionResponseListToIndex( int nIdFormResponse, int nIdForm )
+    {
+        List<OptionalQuestionIndexation> optionalQuestionIndexations = OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdForm );
+        Map<String, String> userResponses = new HashMap<>( );
+        if ( optionalQuestionIndexations != null )
+        {
+            for ( OptionalQuestionIndexation optionalQuestionIndexation : optionalQuestionIndexations )
+            {
+                int idQuestion = optionalQuestionIndexation.getIdQuestion( );
+                Question question = QuestionHome.findByPrimaryKey( idQuestion );
+                List<FormQuestionResponse> formQuestionResponseList = FormQuestionResponseHome.findFormQuestionResponseByResponseQuestion( nIdFormResponse,
+                        idQuestion );
+                for ( FormQuestionResponse formQuestionResponse : formQuestionResponseList )
+                {
+                    List<Response> responseList = formQuestionResponse.getEntryResponse( );
+                    for ( Response response : responseList )
+                    {
+                        if ( responseList.size( ) == 1 )
+                        {
+                            userResponses.put( question.getTitle( ), response.getResponseValue( ) );
+                        }
+                        else
+                            if ( response.getField( ) != null )
+                            {
+                                userResponses.put( response.getField( ).getTitle( ), response.getResponseValue( ) );
+                            }
+                    }
+                }
+            }
+        }
+        return userResponses;
+    }
+
+    /**
+     * return elasticsearch field mapping
+     * 
+     * @param strEntryTypeName
+     *            Entry type name
+     * @return elasticsearch field mapping
+     */
+    private static JSONObject getFieldMappingFromBeanName( String entryTypeBeanName )
+    {
+
+        JSONObject entryType = new JSONObject( );
+
+        if ( entryTypeBeanName.contains( "entryTypeDate" ) )
+        {
+            entryType.put( "type", "date" );
+            entryType.put( "format", "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis" );
+            return entryType;
+        }
+
+        if ( entryTypeBeanName.contains( "entryTypeNumbering" ) )
+        {
+            entryType.put( "type", "long" );
+            return entryType;
+        }
+
+        return null;
+    }
+
+    /**
      * return The duration in days
      * 
-     * @param start
+     * @param currentTime
      *            The younger time.
-     * @param end
+     * @param oldTime
      *            The older time.
      * @return The duration in days
      */
-    public static long compareTwoTimeStamps( java.sql.Timestamp start, java.sql.Timestamp end )
+    private static long duration( java.sql.Timestamp start, java.sql.Timestamp end )
     {
         long milliseconds1 = start.getTime( );
         long milliseconds2 = end.getTime( );

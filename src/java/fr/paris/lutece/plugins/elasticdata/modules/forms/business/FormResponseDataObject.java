@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019, Mairie de Paris
+ * Copyright (c) 2002-2020, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 
+import java.util.Map;
+
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataObject;
 
 /**
@@ -47,6 +49,7 @@ public class FormResponseDataObject extends AbstractDataObject
     private String _strWorkflowState;
     private long _lTaskDuration;
     private String _strUnitName;
+    private Map<String, String> _mapUserResponses;
 
     /**
      * Returns the Form response id
@@ -193,5 +196,25 @@ public class FormResponseDataObject extends AbstractDataObject
     public void setWorkflowState( String strWorkflowState )
     {
         _strWorkflowState = strWorkflowState;
+    }
+
+    /**
+     * Get customer identity attributes
+     * 
+     * @return the map of customer identity attributes
+     */
+    public Map<String, String> getUserResponses( )
+    {
+        return _mapUserResponses;
+    }
+
+    /**
+     * Set the customer identity attributes map
+     * 
+     * @param mapCustomerIdentityAttributes
+     */
+    public void setUserResponses( Map<String, String> mapUserResponses )
+    {
+        _mapUserResponses = mapUserResponses;
     }
 }

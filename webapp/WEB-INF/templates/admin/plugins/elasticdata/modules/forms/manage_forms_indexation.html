@@ -1,0 +1,30 @@
+<@box>
+    <@boxHeader title='#i18n{module.elasticdata.forms.manage_forms.title}' boxTools=false>
+    </@boxHeader>
+    <@boxBody>
+        <@messages infos=infos />
+        <@table>
+            <tr>
+                <th>#i18n{module.elasticdata.forms.manage_forms.columnTitle}</th>
+                <th>#i18n{module.elasticdata.forms.manage_forms.columnDescription}</th>
+                <th>#i18n{portal.util.labelActions}</th>
+            </tr>
+            <@tableHeadBodySeparator />
+            <#list form_list as form>
+                <tr>
+                    <td>
+                        ${form.title}
+                    </td>
+                    <td>
+                        ${form.description}
+                    </td>
+                    <td>
+                        <@aButton
+                            href='jsp/admin/plugins/elasticdata/modules/forms/IndexingAppElasticData.jsp?view=modifyFormIndexation&idForm=${form.id}'
+                            buttonIcon='pencil' />
+                    </td>
+                </tr>
+            </#list>
+        </@table>
+    </@boxBody>
+</@box>

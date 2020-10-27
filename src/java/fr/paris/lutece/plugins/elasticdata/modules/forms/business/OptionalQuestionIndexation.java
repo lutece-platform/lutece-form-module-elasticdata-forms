@@ -31,43 +31,85 @@
  *
  * License 1.0
  */
-package fr.paris.lutece.plugins.elasticdata.modules.forms.service;
+package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 
 import java.io.Serializable;
-import fr.paris.lutece.portal.service.event.ResourceEventManager;
-import fr.paris.lutece.portal.service.plugin.Plugin;
-import fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation;
-import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
- * class FormPlugin
+ * This is the business class for the object OptionalQuestionIndexation
  */
-public final class ElasticDataFormsPlugin extends PluginDefaultImplementation implements Serializable
+public class OptionalQuestionIndexation implements Serializable
 {
-    private static final long serialVersionUID = 3800926921482494176L;
-    /** The Constant PLUGIN_NAME. */
-    public static final String PLUGIN_NAME = "elasticdata-forms";
-    // Generated serial UID
-    // Beans
-    private static final String BEAN_FORM_RESPONSE_EVENT_LISTENER = "elasticdata-forms.FormResponseIndexerEventListener";
+    private static final long serialVersionUID = 1L;
+
+    // Variables declarations
+    private int _nId;
+
+    private int _nIdForm;
+
+    private int _nIdQuestion;
 
     /**
-     * {@inheritDoc}
+     * Returns the Id
+     * 
+     * @return The Id
      */
-    @Override
-    public void init( )
+    public int getId( )
     {
-        ResourceEventManager.register( SpringContextService.getBean( BEAN_FORM_RESPONSE_EVENT_LISTENER ) );
+        return _nId;
     }
 
     /**
-     * Return the plugin
-     *
-     * @return the plugin
+     * Sets the Id
+     * 
+     * @param nId
+     *            The Id
      */
-    public static Plugin getPlugin( )
+    public void setId( int nId )
     {
-        return PluginService.getPlugin( PLUGIN_NAME );
+        _nId = nId;
     }
+
+    /**
+     * Returns the IdForm
+     * 
+     * @return The IdForm
+     */
+    public int getIdForm( )
+    {
+        return _nIdForm;
+    }
+
+    /**
+     * Sets the IdForm
+     * 
+     * @param nIdForm
+     *            The IdForm
+     */
+    public void setIdForm( int nIdForm )
+    {
+        _nIdForm = nIdForm;
+    }
+
+    /**
+     * Returns the IdQuestion
+     * 
+     * @return The IdQuestion
+     */
+    public int getIdQuestion( )
+    {
+        return _nIdQuestion;
+    }
+
+    /**
+     * Sets the IdQuestion
+     * 
+     * @param nIdQuestion
+     *            The IdQuestion
+     */
+    public void setIdQuestion( int nIdQuestion )
+    {
+        _nIdQuestion = nIdQuestion;
+    }
+
 }
