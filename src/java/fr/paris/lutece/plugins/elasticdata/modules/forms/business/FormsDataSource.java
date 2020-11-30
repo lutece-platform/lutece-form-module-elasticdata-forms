@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
+import fr.paris.lutece.plugins.elasticdata.modules.forms.util.Lambert93;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormHome;
@@ -59,6 +60,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 /**
  * FormsDataSource
@@ -102,7 +110,12 @@ public class FormsDataSource extends AbstractDataSource
 
                 if ( fieldMapping != null )
                 {
-                    fields.put( question.getTitle( ), fieldMapping );
+                    String key = question.getId( ) + "." + StringUtils.abbreviate( question.getTitle( ), 100 );
+                    if ( entryTypeBeanName.equals( "forms.entryTypeGeolocation" ) )
+                    {
+                        key = "userResponses." + key + ".elastic.geopoint";
+                    }
+                    fields.put( key, fieldMapping );
                 }
 
             }
@@ -148,8 +161,7 @@ public class FormsDataSource extends AbstractDataSource
             long duration = duration( formResponseCreation, resourceHist.getCreationDate( ) );
             formResponseDataObject.setTaskDuration( duration );
         }
-        formResponseDataObject.setUserResponses( getFormQuestionResponseListToIndex( formResponseId, formId ) );
-        formResponseDataObject.setWorkflowState( stateFormResponse );
+        getFormQuestionResponseListToIndex( formResponseId, formId, formResponseDataObject );
         return formResponseDataObject;
     }
 
@@ -192,10 +204,12 @@ public class FormsDataSource extends AbstractDataSource
      *            The Form id
      * @return user
      */
-    private Map<String, String> getFormQuestionResponseListToIndex( int nIdFormResponse, int nIdForm )
+    private void getFormQuestionResponseListToIndex( int nIdFormResponse, int nIdForm, FormResponseDataObject formResponseDataObject )
     {
         List<OptionalQuestionIndexation> optionalQuestionIndexations = OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdForm );
         Map<String, String> userResponses = new HashMap<>( );
+        Map<String, String [ ]> userResponsesMultiValued = new HashMap<>( );
+
         if ( optionalQuestionIndexations != null )
         {
             for ( OptionalQuestionIndexation optionalQuestionIndexation : optionalQuestionIndexations )
@@ -206,23 +220,54 @@ public class FormsDataSource extends AbstractDataSource
                         idQuestion );
                 for ( FormQuestionResponse formQuestionResponse : formQuestionResponseList )
                 {
+                    String [ ] responses = { };
+                    String questionTitle = StringUtils.abbreviate( question.getTitle( ), 100 );
                     List<Response> responseList = formQuestionResponse.getEntryResponse( );
+
                     for ( Response response : responseList )
                     {
-                        if ( responseList.size( ) == 1 )
+
+                        if ( response.getField( ) != null )
                         {
-                            userResponses.put( question.getTitle( ), response.getResponseValue( ) );
-                        }
-                        else
-                            if ( response.getField( ) != null )
+                            if ( question.getEntry( ).getEntryType( ).getBeanName( ).equals( "forms.entryTypeCheckBox" ) )
                             {
-                                userResponses.put( response.getField( ).getTitle( ), response.getResponseValue( ) );
+                                responses = ArrayUtils.add( responses, response.getResponseValue( ) );
                             }
+                            else
+                            {
+                                userResponses.put( question.getId( ) + "." + questionTitle + "." + response.getField( ).getCode( ), response.getResponseValue( ) );
+                            }
+                        }
+
+                        if ( response.getField( ) == null )
+                        {
+                            userResponses.put( question.getId( ) + "." + questionTitle, response.getResponseValue( ) );
+                        }
+
+                    }
+
+                    if ( responses.length > 0 )
+                    {
+                        userResponsesMultiValued.put( question.getId( ) + "." + questionTitle, responses );
+                    }
+
+                    if ( question.getEntry( ).getEntryType( ).getBeanName( ).equals( "forms.entryTypeGeolocation" ) )
+                    {
+                        Response x = responseList.stream( ).filter( response -> "X".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );
+                        Response y = responseList.stream( ).filter( response -> "Y".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );
+
+                        if ( x != null && y != null && NumberUtils.isCreatable( x.getResponseValue( ) ) && NumberUtils.isCreatable( y.getResponseValue( ) ) )
+                        {
+                            String geopoint = Lambert93.toLatLon( Double.parseDouble( x.getResponseValue( ) ), Double.parseDouble( y.getResponseValue( ) ) );
+                            userResponses.put( question.getId( ) + "." + question.getTitle( ) + ".elastic.geopoint", geopoint );
+                        }
                     }
                 }
             }
         }
-        return userResponses;
+
+        formResponseDataObject.setUserResponses( userResponses );
+        formResponseDataObject.setUserResponsesMultiValued( userResponsesMultiValued );
     }
 
     /**
@@ -250,6 +295,12 @@ public class FormsDataSource extends AbstractDataSource
             return entryType;
         }
 
+        if ( entryTypeBeanName.equals( "forms.entryTypeGeolocation" ) )
+        {
+            entryType.put( "type", "geo_point" );
+            return entryType;
+        }
+
         return null;
     }
 
@@ -269,5 +320,11 @@ public class FormsDataSource extends AbstractDataSource
         long diff = milliseconds2 - milliseconds1;
         long diffDays = diff / ( 24 * 60 * 60 * 1000 );
         return diffDays;
+    }
+
+    public static <T> Predicate<T> distinctByKey( Function<? super T, Object> keyExtractor )
+    {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>( );
+        return t -> map.putIfAbsent( keyExtractor.apply( t ), Boolean.TRUE ) == null;
     }
 }

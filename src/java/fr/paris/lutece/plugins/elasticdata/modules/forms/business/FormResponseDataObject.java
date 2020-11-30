@@ -50,6 +50,7 @@ public class FormResponseDataObject extends AbstractDataObject
     private long _lTaskDuration;
     private String _strUnitName;
     private Map<String, String> _mapUserResponses;
+    private Map<String, String [ ]> _mapUserResponsesMultiValued;
 
     /**
      * Returns the Form response id
@@ -216,5 +217,25 @@ public class FormResponseDataObject extends AbstractDataObject
     public void setUserResponses( Map<String, String> mapUserResponses )
     {
         _mapUserResponses = mapUserResponses;
+    }
+
+    /**
+     * Get customer identity attributes
+     * 
+     * @return the map of customer identity attributes
+     */
+    public Map<String, String [ ]> getUserResponsesMultiValued( )
+    {
+        return _mapUserResponsesMultiValued;
+    }
+
+    /**
+     * Set the customer identity attributes map
+     * 
+     * @param _mapUserResponsesMultiValued
+     */
+    public void setUserResponsesMultiValued( Map<String, String [ ]> mapUserResponsesMultiValued )
+    {
+        _mapUserResponsesMultiValued = mapUserResponsesMultiValued;
     }
 }
