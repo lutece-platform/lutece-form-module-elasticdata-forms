@@ -161,6 +161,7 @@ public class FormsDataSource extends AbstractDataSource
             long duration = duration( formResponseCreation, resourceHist.getCreationDate( ) );
             formResponseDataObject.setTaskDuration( duration );
         }
+        formResponseDataObject.setWorkflowState( stateFormResponse );
         getFormQuestionResponseListToIndex( formResponseId, formId, formResponseDataObject );
         return formResponseDataObject;
     }

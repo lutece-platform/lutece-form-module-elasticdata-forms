@@ -7,7 +7,6 @@
     <property name="id" value="FormsDataSource" />
     <property name="name" value="Base de réponse(s) de formulaire(s)." />
     <property name="targetIndexName" value="dev_formsdatasource" />
-    <property name="dataType" value="_doc" />
     <property name="mappings">
       <value><![CDATA[
                       {
