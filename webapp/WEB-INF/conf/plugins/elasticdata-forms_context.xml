@@ -23,4 +23,24 @@
       </value>
     </property>
   </bean>
+    <bean id="elasticdata-forms.formResponseHistoryDataSource" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormResponseHistoryDataSource">
+    <property name="id" value="FormResponseHistoryDataSource" />
+    <property name="name" value="Historique des actions de workflow concernant les réponses de formulaire(s)." />
+    <property name="targetIndexName" value="dev_formresponsehistorydatasource" />
+    <property name="mappings">
+      <value><![CDATA[
+                      {
+                      "mappings": {
+                            "properties": {
+                              "timestamp": {
+                                "type":   "date",
+                                "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+                              }
+                            }
+                          }
+                      }
+                      ]]>
+      </value>
+    </property>
+  </bean>
 </beans>

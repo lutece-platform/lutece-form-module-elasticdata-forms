@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.forms.service.listener;
 
+import fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormResponseHistoryDataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormsDataSource;
 import fr.paris.lutece.plugins.forms.business.FormResponse;
 import fr.paris.lutece.plugins.forms.business.form.search.IndexerAction;
@@ -44,6 +45,7 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
 {
     private static final String CONSTANT_FORM_RESPONSE_LISTENER_NAME = "FormResponseIndexerEventListener";
     FormsDataSource _formsDataSource = new FormsDataSource( );
+    FormResponseHistoryDataSource _formResponseHistoryDataSource = new FormResponseHistoryDataSource( );
 
     @Override
     public String getName( )
@@ -88,6 +90,7 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
         {
             int nIdResource = Integer.parseInt( event.getIdResource( ) );
             _formsDataSource.indexDocument( nIdResource, nIdTask );
+            _formResponseHistoryDataSource.indexDocument( nIdResource, nIdTask );
         }
         catch( NumberFormatException e )
         {
