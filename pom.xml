@@ -31,6 +31,12 @@
     </repositories>
     <dependencies>
         <dependency>
+            <groupId>fr.paris.lutece</groupId>
+            <artifactId>lutece-core</artifactId>
+            <version>[6.2.0,)</version>
+            <type>lutece-core</type>
+        </dependency>
+        <dependency>
             <groupId>fr.paris.lutece.plugins</groupId>
             <artifactId>plugin-elasticdata</artifactId>
             <version>[1.0.6-SNAPSHOT,)</version>
