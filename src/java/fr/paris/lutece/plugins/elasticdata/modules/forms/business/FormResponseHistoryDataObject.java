@@ -47,6 +47,7 @@ public class FormResponseHistoryDataObject extends AbstractDataObject
     private String _strActionName;
     private long _lTaskDuration;
     private String _strUnitName;
+    private String _strWorkflowState;
     
     /**
      * Returns the Form response id
@@ -193,5 +194,26 @@ public class FormResponseHistoryDataObject extends AbstractDataObject
     public void setActionName( String strActionName )
     {
         _strActionName = strActionName;
+    }
+
+    /**
+     * Returns the Workflow state
+     * 
+     * @return The Workflow state
+     */
+    public String getWorkflowState( )
+    {
+        return _strWorkflowState;
+    }
+
+    /**
+     * Sets the Workflow state
+     * 
+     * @param strWorkflowState
+     *            The Workflow state
+     */
+    public void setWorkflowState( String strWorkflowState )
+    {
+        _strWorkflowState = strWorkflowState;
     }
 }

@@ -78,8 +78,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 public class FormsDataSource extends AbstractDataSource
 {
 
-    private final transient static StateService _stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
-
     @Override
     public Collection<DataObject> fetchDataObjects( )
     {
@@ -152,6 +150,7 @@ public class FormsDataSource extends AbstractDataSource
     public FormResponseDataObject create( FormResponse formResponse, Form form )
     {
         IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
+        StateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
         State stateFormResponse = null;
         Action action = null;
         int formResponseId = formResponse.getId( );
@@ -168,14 +167,14 @@ public class FormsDataSource extends AbstractDataSource
 
         if(resourceHist != null)
         {
-            action= (resourceHist.getAction().isAutomaticReflexiveAction())? resourceHist.getAction(): null;
-            stateFormResponse = resourceHist.getAction().getStateAfter();  
+            action= (resourceHist.getAction( ).isAutomaticReflexiveAction( ) )? resourceHist.getAction( ): null;
+            stateFormResponse = stateService.findByPrimaryKey( resourceHist.getAction( ).getStateAfter( ).getId( ) );
             long duration = duration( formResponseCreation, resourceHist.getCreationDate( ) );
             formResponseDataObject.setTaskDuration( duration );  
         }
         else
         {
-            _stateService.findByResource( formResponseId, FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
+            stateFormResponse = stateService.findByResource( formResponseId, FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
         }
 
         if( stateFormResponse != null ) {

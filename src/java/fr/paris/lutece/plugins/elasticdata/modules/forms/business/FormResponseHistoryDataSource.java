@@ -43,10 +43,13 @@ import fr.paris.lutece.plugins.forms.business.FormResponse;
 import fr.paris.lutece.plugins.forms.business.FormResponseHome;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceHistoryService;
+import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,6 +99,7 @@ public class FormResponseHistoryDataSource extends AbstractDataSource
 
         List<FormResponseHistoryDataObject> formResponseHistoryList = new ArrayList<>();
         IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
+        StateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
         List<ResourceHistory> listResourceHistory = _resourceHistoryService.getAllHistoryByResource( formResponse.getId( ), FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
         List<ResourceHistory> listResourceHistorySorted = listResourceHistory.stream().sorted(Comparator.comparing(ResourceHistory::getId)).collect(Collectors.toList());
 
@@ -114,6 +118,11 @@ public class FormResponseHistoryDataSource extends AbstractDataSource
             formResponseHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
             formResponseHistoryDataObject.setTaskDuration( lTaskDuration );
             formResponseHistoryDataObject.setActionName( resourceHistory.getAction( ).getName( ) );
+            
+            State stateFormResponse = stateService.findByPrimaryKey( resourceHistory.getAction( ).getStateAfter( ).getId( ) );
+            if( stateFormResponse != null ) {
+                formResponseHistoryDataObject.setWorkflowState( stateFormResponse.getName( ) );
+            }
 
             formResponseCreation = resourceHistory.getCreationDate( );
 
