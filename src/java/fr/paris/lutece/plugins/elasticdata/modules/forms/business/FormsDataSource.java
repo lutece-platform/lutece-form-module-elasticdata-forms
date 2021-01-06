@@ -48,12 +48,16 @@ import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.QuestionHome;
 import fr.paris.lutece.plugins.genericattributes.business.Response;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
+import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import net.sf.json.JSONObject;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceHistoryService;
+import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +77,9 @@ import org.apache.commons.lang3.math.NumberUtils;
  */
 public class FormsDataSource extends AbstractDataSource
 {
+
+    private final transient static StateService _stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
+
     @Override
     public Collection<DataObject> fetchDataObjects( )
     {
@@ -145,23 +152,40 @@ public class FormsDataSource extends AbstractDataSource
     public FormResponseDataObject create( FormResponse formResponse, Form form )
     {
         IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
-        String stateFormResponse = null;
+        State stateFormResponse = null;
+        Action action = null;
         int formResponseId = formResponse.getId( );
         int formId = formResponse.getFormId( );
         Timestamp formResponseCreation = formResponse.getCreation( );
         FormResponseDataObject formResponseDataObject = new FormResponseDataObject( );
+
         formResponseDataObject.setId( String.valueOf( formResponseId ) );
         formResponseDataObject.setFormName( form.getTitle( ) );
         formResponseDataObject.setFormId( form.getId( ) );
         formResponseDataObject.setTimestamp( formResponseCreation.getTime( ) );
+
         ResourceHistory resourceHist = _resourceHistoryService.getLastHistoryResource( formResponseId, FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
-        if ( resourceHist != null )
+
+        if(resourceHist != null)
         {
-            stateFormResponse = resourceHist.getAction( ).getName( );
+            action= (resourceHist.getAction().isAutomaticReflexiveAction())? resourceHist.getAction(): null;
+            stateFormResponse = resourceHist.getAction().getStateAfter();  
             long duration = duration( formResponseCreation, resourceHist.getCreationDate( ) );
-            formResponseDataObject.setTaskDuration( duration );
+            formResponseDataObject.setTaskDuration( duration );  
         }
-        formResponseDataObject.setWorkflowState( stateFormResponse );
+        else
+        {
+            _stateService.findByResource( formResponseId, FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
+        }
+
+        if( stateFormResponse != null ) {
+            formResponseDataObject.setWorkflowState( stateFormResponse.getName( ) );
+        }
+
+        if( action != null ) {
+            formResponseDataObject.setActionName( action.getName( ) );
+        }
+
         getFormQuestionResponseListToIndex( formResponseId, formId, formResponseDataObject );
         return formResponseDataObject;
     }

@@ -46,6 +46,7 @@ public class FormResponseDataObject extends AbstractDataObject
     private String _strName;
     private String _strFormName;
     private int _nFormId;
+    private String _strActionName;
     private String _strWorkflowState;
     private long _lTaskDuration;
     private String _strUnitName;
@@ -176,6 +177,27 @@ public class FormResponseDataObject extends AbstractDataObject
     public void setUnitName( String strUnitName )
     {
         _strUnitName = strUnitName;
+    }
+
+    /**
+     * Returns the Action name
+     * 
+     * @return The Action Name
+     */
+    public String getActionName( )
+    {
+        return _strActionName;
+    }
+
+    /**
+     * Sets the Action name
+     * 
+     * @param strActionName
+     *            The Action Name
+     */
+    public void setActionName( String strActionName )
+    {
+        _strActionName = strActionName;
     }
 
     /**

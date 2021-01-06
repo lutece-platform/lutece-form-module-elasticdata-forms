@@ -74,10 +74,7 @@ public class FormResponseHistoryDataSource extends AbstractDataSource
             listFormResponses.parallelStream( ).forEach( formResponse -> {
                 if ( !formResponse.isFromSave( ) )
                 {
-                    List<FormResponseHistoryDataObject> formResponseHistoryList = getResourceHistoryList( formResponse, form );
-                    for( FormResponseHistoryDataObject formResponseHistory : formResponseHistoryList ) {
-                        collResult.add( formResponseHistory );
-                    }
+                    collResult.addAll( getResourceHistoryList( formResponse, form ) );
                 }
             } );
         }
