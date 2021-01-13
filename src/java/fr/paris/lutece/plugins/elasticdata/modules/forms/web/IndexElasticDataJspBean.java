@@ -51,6 +51,7 @@ import fr.paris.lutece.plugins.forms.business.StepHome;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -77,6 +78,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     private static final String MARK_OPTIONAL_QUESTION_INDEXATION_LIST = "optional_question_indexation_list";
 
     private static final String PROPERTY_PAGE_TITLE = "module.description";
+    protected static final String MESSAGE_SUCCESS_SAVE = "module.elasticdata.forms.modify.save.success";
 
     private static final String PARAMETER_DATA_SOURCE = "data_source";
     private static final String PARAMETER_FORM_ID = "idForm";
@@ -189,7 +191,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
                 }
             }
         }
-
+        addInfo( I18nService.getLocalizedString( MESSAGE_SUCCESS_SAVE, getLocale( ) ) );
         return redirect( request, VIEW_MODIFY_FORM_INDEXATION, PARAMETER_FORM_ID, nIdFrom );
     }
 }
