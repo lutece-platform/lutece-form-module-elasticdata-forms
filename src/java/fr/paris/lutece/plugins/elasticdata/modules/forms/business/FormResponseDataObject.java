@@ -49,9 +49,15 @@ public class FormResponseDataObject extends AbstractDataObject
     private String _strActionName;
     private String _strWorkflowState;
     private long _lTaskDuration;
+    private long _lCompleteDuration;
     private String _strUnitName;
     private Map<String, String> _mapUserResponses;
     private Map<String, String [ ]> _mapUserResponsesMultiValued;
+    private String _strParentId;
+    private String _strParentName;
+    private String _strDocumentTypeName;
+    private int _nFormResponseId;
+    private String _strWorflowAdminCreator;
 
     /**
      * Returns the Form response id
@@ -72,6 +78,90 @@ public class FormResponseDataObject extends AbstractDataObject
     public void setId( String strId )
     {
         _strId = strId;
+    }
+
+    /**
+     * Returns the Form response id
+     * 
+     * @return The Form response id
+     */
+    public int getFormResponseId( )
+    {
+        return _nFormResponseId;
+    }
+
+    /**
+     * Sets the Form response id
+     * 
+     * @param nFormResponseId
+     *            The Form response id
+     */
+    public void setFormResponseId( int nFormResponseId )
+    {
+        _nFormResponseId = nFormResponseId;
+    }
+
+    /**
+     * Get the parent id
+     * 
+     * @return the parent id
+     */
+    public String getParentId( )
+    {
+        return _strParentId;
+    }
+
+    /**
+     * Sets the parent id
+     * 
+     * @param strParentId
+     *            The Form response id
+     */
+    public void setParentId( String strParentId )
+    {
+        _strParentId = strParentId;
+    }
+
+    /**
+     * Get the parent name
+     * 
+     * @return the parent name
+     */
+    public String getParentName( )
+    {
+        return _strParentName;
+    }
+
+    /**
+     * Sets the parent name
+     * 
+     * @param strParentName
+     *            The parent name
+     */
+    public void setParentName( String strParentName )
+    {
+        _strParentName = strParentName;
+    }
+
+    /**
+     * Get the document type name
+     * 
+     * @return the document type name
+     */
+    public String getDocumentTypeName( )
+    {
+        return _strDocumentTypeName;
+    }
+
+    /**
+     * Sets the document type name
+     * 
+     * @param strDocumentTypeName
+     *            The document type name
+     */
+    public void setDocumentTypeName( String strDocumentTypeName )
+    {
+        _strDocumentTypeName = strDocumentTypeName;
     }
 
     /**
@@ -117,9 +207,9 @@ public class FormResponseDataObject extends AbstractDataObject
     }
 
     /**
-     * Returns the Duration
+     * Returns the task Duration
      * 
-     * @return The Duration
+     * @return The task Duration
      */
     public long getTaskDuration( )
     {
@@ -127,14 +217,35 @@ public class FormResponseDataObject extends AbstractDataObject
     }
 
     /**
-     * Sets the Duration
+     * Sets the task Duration
      * 
      * @param lTaskDuration
-     *            The Duration
+     *            The task Duration
      */
     public void setTaskDuration( long lTaskDuration )
     {
         _lTaskDuration = lTaskDuration;
+    }
+
+    /**
+     * Returns the full Duration
+     * 
+     * @return The Duration
+     */
+    public long getCompleteDuration( )
+    {
+        return _lCompleteDuration;
+    }
+
+    /**
+     * Sets the full Duration
+     * 
+     * @param lCompleteDuration
+     *            The full Duration
+     */
+    public void setCompleteDuration( long lCompleteDuration )
+    {
+        _lCompleteDuration = lCompleteDuration;
     }
 
     /**
@@ -259,5 +370,26 @@ public class FormResponseDataObject extends AbstractDataObject
     public void setUserResponsesMultiValued( Map<String, String [ ]> mapUserResponsesMultiValued )
     {
         _mapUserResponsesMultiValued = mapUserResponsesMultiValued;
+    }
+
+    /**
+     * Returns the WorflowAdminCreator
+     * 
+     * @return The WorflowAdminCreator
+     */
+    public String getWorflowAdminCreator( )
+    {
+        return _strWorflowAdminCreator;
+    }
+
+    /**
+     * Sets the WorflowAdminCreator
+     * 
+     * @param strWorflowAdminCreator
+     *            The WorflowAdminCreator
+     */
+    public void setWorflowAdminCreator( String strWorflowAdminCreator )
+    {
+        _strWorflowAdminCreator = strWorflowAdminCreator;
     }
 }
