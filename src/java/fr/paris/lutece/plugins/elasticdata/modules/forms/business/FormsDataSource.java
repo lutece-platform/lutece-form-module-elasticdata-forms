@@ -87,22 +87,19 @@ public class FormsDataSource extends AbstractDataSource
     public Collection<DataObject> fetchDataObjects( )
     {
         ArrayList<DataObject> collResult = new ArrayList<>( );
+        IResourceHistoryService resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
         List<Form> listForms = FormHome.getFormList( );
         IndexingStatus status = IndexingStatusService.getInstance( ).getIndexingStatus( DATA_SOURCE_NAME );
-        IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
         listForms.parallelStream( ).forEach( form -> {
             List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
             List<Integer> listFormResponseId = listFormResponses.parallelStream( ).map( i -> i.getId( ) ).distinct( ).collect( Collectors.toList( ) );
-            List<ResourceHistory> listResourceHistory = new ArrayList<>( );
-            List<Integer> listHistoryId = _resourceHistoryService.getListHistoryIdByListIdResourceId( listFormResponseId, FormResponse.RESOURCE_TYPE,
+            List<Integer> listHistoryId = resourceHistoryService.getListHistoryIdByListIdResourceId( listFormResponseId, FormResponse.RESOURCE_TYPE,
                     form.getIdWorkflow( ) );
             status.setnNbTotalObj( status.getNbTotalObj( ) + listFormResponses.size( ) + listHistoryId.size( ) );
             listFormResponses.parallelStream( ).forEach( formResponse -> {
                 if ( !formResponse.isFromSave( ) )
                 {
-                    List<ResourceHistory> listFormResponseHistory = listResourceHistory.stream( ).filter( i -> i.getIdResource( ) == formResponse.getId( ) )
-                            .collect( Collectors.toList( ) );
-                    collResult.addAll( create( formResponse, form, listFormResponseHistory, status ) );
+                    collResult.addAll( getFormResponseWithHistory( formResponse, form, status ) );
                 }
             } );
         } );
@@ -143,7 +140,30 @@ public class FormsDataSource extends AbstractDataSource
     }
 
     /**
-     * Create a form response object
+     * Get a list of documents according to the form response
+     * 
+     * @param formResponse
+     *            The FormResponse
+     * @param form
+     *            The Form
+     * @param status
+     *            The index status to feed
+     * @return a list of form response object
+     */
+    public List<FormResponseDataObject> getFormResponseWithHistory( FormResponse formResponse, Form form, IndexingStatus status )
+    {
+        List<FormResponseDataObject> formResponseDataObjectList = new ArrayList<>( );
+        FormResponseDataObject formResponseDataObject = getFormResponse( formResponse, form );
+        formResponseDataObjectList.add( formResponseDataObject );
+        status.setCurrentNbIndexedObj( status.getCurrentNbIndexedObj( ) + 1 );
+        List<FormResponseDataObject> formResponseHistoryList = getResourceHistoryList( formResponse, form, formResponseDataObject );
+        status.setCurrentNbIndexedObj( status.getCurrentNbIndexedObj( ) + formResponseHistoryList.size( ) );
+        formResponseDataObjectList.addAll( formResponseHistoryList );
+        return formResponseDataObjectList;
+    }
+
+    /**
+     * Get a list of documents according to the form response
      * 
      * @param formResponse
      *            The FormResponse
@@ -151,9 +171,27 @@ public class FormsDataSource extends AbstractDataSource
      *            The Form
      * @return The form response object
      */
-    public List<FormResponseDataObject> create( FormResponse formResponse, Form form, List<ResourceHistory> listFormResponseHistory, IndexingStatus status )
+    public List<FormResponseDataObject> getFormResponseWithHistory( FormResponse formResponse, Form form )
     {
         List<FormResponseDataObject> formResponseDataObjectList = new ArrayList<>( );
+        FormResponseDataObject formResponseDataObject = getFormResponse( formResponse, form );
+        formResponseDataObjectList.add( formResponseDataObject );
+        List<FormResponseDataObject> formResponseHistoryList = getResourceHistoryList( formResponse, form, formResponseDataObject );
+        formResponseDataObjectList.addAll( formResponseHistoryList );
+        return formResponseDataObjectList;
+    }
+
+    /**
+     * Get a form response object
+     * 
+     * @param formResponse
+     *            The FormResponse
+     * @param form
+     *            The Form
+     * @return The form response object
+     */
+    private FormResponseDataObject getFormResponse( FormResponse formResponse, Form form )
+    {
         IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
         StateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
         State stateFormResponse = null;
@@ -190,26 +228,7 @@ public class FormsDataSource extends AbstractDataSource
             formResponseDataObject.setActionName( action.getName( ) );
         }
         getFormQuestionResponseListToIndex( formResponseId, formId, formResponseDataObject );
-        formResponseDataObjectList.add( formResponseDataObject );
-        status.setCurrentNbIndexedObj( status.getCurrentNbIndexedObj( ) + 1 );
-        List<FormResponseDataObject> formResponseHistoryList = getResourceHistoryList( formResponse, form, formResponseDataObject, status );
-        formResponseDataObjectList.addAll( formResponseHistoryList );
-        return formResponseDataObjectList;
-    }
-
-    /**
-     * Create a form response object
-     * 
-     * @param formResponse
-     *            The FormResponse
-     * @param form
-     *            The Form
-     * @return The form response object
-     */
-    public List<FormResponseDataObject> create( FormResponse formResponse, Form form )
-    {
-        List<FormResponseDataObject> formResponseDataObjectList = new ArrayList<>( );
-        return formResponseDataObjectList;
+        return formResponseDataObject;
     }
 
     /**
@@ -229,7 +248,7 @@ public class FormsDataSource extends AbstractDataSource
             // Force init data sources of ElasticData plugin
             DataSourceService.getDataSources( );
             DataSource source = DataSourceService.getDataSource( DATA_SOURCE_NAME );
-            List<FormResponseDataObject> formResponseDataObjectList = create( formResponse, form );
+            List<FormResponseDataObject> formResponseDataObjectList = getFormResponseWithHistory( formResponse, form );
             for ( FormResponseDataObject formResponseDataObject : formResponseDataObjectList )
             {
                 DataSourceService.processIncrementalIndexing( source, formResponseDataObject );
@@ -351,13 +370,12 @@ public class FormsDataSource extends AbstractDataSource
      *            The Form
      * @return The form response object
      */
-    private List<FormResponseDataObject> getResourceHistoryList( FormResponse formResponse, Form form, FormResponseDataObject formResponseDataObject,
-            IndexingStatus status )
+    private List<FormResponseDataObject> getResourceHistoryList( FormResponse formResponse, Form form, FormResponseDataObject formResponseDataObject )
     {
         List<FormResponseDataObject> formResponseHistoryList = new ArrayList<>( );
-        IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
+        IResourceHistoryService resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
         StateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
-        List<ResourceHistory> listResourceHistory = _resourceHistoryService.getAllHistoryByResource( formResponse.getId( ), FormResponse.RESOURCE_TYPE,
+        List<ResourceHistory> listResourceHistory = resourceHistoryService.getAllHistoryByResource( formResponse.getId( ), FormResponse.RESOURCE_TYPE,
                 form.getIdWorkflow( ) );
         List<ResourceHistory> listResourceHistorySorted = listResourceHistory.stream( ).sorted( Comparator.comparing( ResourceHistory::getId ) )
                 .collect( Collectors.toList( ) );
@@ -392,7 +410,6 @@ public class FormsDataSource extends AbstractDataSource
             }
             lstartingDateDuration = resourceHistory.getCreationDate( );
             formResponseHistoryList.add( FormResponseHistoryDataObject );
-            status.setCurrentNbIndexedObj( status.getCurrentNbIndexedObj( ) + 1 );
         }
         return formResponseHistoryList;
     }

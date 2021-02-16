@@ -57,7 +57,9 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
     @Override
     public void addedResource( ResourceEvent event )
     {
-        indexResource( event, IndexerAction.TASK_CREATE );
+        new Thread( ( ) -> {
+            indexResource( event, IndexerAction.TASK_CREATE );
+        } ).start( );
     }
 
     /**
@@ -66,7 +68,9 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
     @Override
     public void deletedResource( ResourceEvent event )
     {
-        indexResource( event, IndexerAction.TASK_DELETE );
+        new Thread( ( ) -> {
+            indexResource( event, IndexerAction.TASK_DELETE );
+        } ).start( );
     }
 
     /**
@@ -75,7 +79,9 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
     @Override
     public void updatedResource( ResourceEvent event )
     {
-        indexResource( event, IndexerAction.TASK_MODIFY );
+        new Thread( ( ) -> {
+            indexResource( event, IndexerAction.TASK_MODIFY );
+        } ).start( );
     }
 
     private void indexResource( ResourceEvent event, int nIdTask )

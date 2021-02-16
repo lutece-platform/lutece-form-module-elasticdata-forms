@@ -59,6 +59,11 @@ public class FormResponseDataObject extends AbstractDataObject
     private int _nFormResponseId;
     private String _strWorflowAdminCreator;
 
+    FormResponseDataObject( )
+    {
+        _strWorkflowState = "unknow";
+    }
+
     /**
      * Returns the Form response id
      * 
