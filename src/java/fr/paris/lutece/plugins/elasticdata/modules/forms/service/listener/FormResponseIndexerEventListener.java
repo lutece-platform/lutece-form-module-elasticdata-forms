@@ -80,7 +80,8 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
     public void updatedResource( ResourceEvent event )
     {
         new Thread( ( ) -> {
-            indexResource( event, IndexerAction.TASK_MODIFY );
+            // indexResource( event, IndexerAction.TASK_MODIFY );
+            indexResource( event, IndexerAction.TASK_CREATE );
         } ).start( );
     }
 
@@ -97,7 +98,7 @@ public class FormResponseIndexerEventListener implements EventRessourceListener
         }
         catch( NumberFormatException e )
         {
-            AppLogService.error( "Unable to parse given event id ressource to integer " + event.getIdResource( ), e );
+            AppLogService.error( "Unable to parse given event id resource to integer " + event.getIdResource( ), e );
         }
     }
 
