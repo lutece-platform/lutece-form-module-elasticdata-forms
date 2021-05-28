@@ -150,7 +150,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
         StringBuilder sbLogs = new StringBuilder( );
         String strDataSourceId = request.getParameter( PARAMETER_DATA_SOURCE );
         DataSource source = DataSourceService.getDataSource( strDataSourceId );
-        DataSourceService.processFullIndexing( sbLogs, source, false, null );
+        DataSourceService.processFullIndexing( source, false );
         addInfo( sbLogs.toString( ) );
         return redirectView( request, VIEW_MANAGE_FORMS_INDEXATION );
     }
