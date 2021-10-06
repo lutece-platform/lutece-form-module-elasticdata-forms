@@ -330,6 +330,7 @@ public class FormsDataSource extends AbstractDataSource
     {
         ActionFilter actionFilter = new ActionFilter( );
         actionFilter.setIdWorkflow( nIdWorkflow );
+        actionFilter.setAutomaticReflexiveAction( false );
         return _actionService.getListActionByFilter( actionFilter );
     }
 
