@@ -378,7 +378,7 @@ public class FormsDataSource extends AbstractDataSource
                 {
                     userResponsesMultiValued.put( question.getId( ) + "." + questionTitle, responses );
                 }
-                if ( responseList.get( 0 ).getEntry( ).getEntryType( ).getBeanName( ).contains( ENTRY_TYPE_GEOLOCATION ) )
+                if ( !responseList.isEmpty( ) && responseList.get( 0 ).getEntry( ).getEntryType( ).getBeanName( ).contains( ENTRY_TYPE_GEOLOCATION ) )
                 {
                     Response x = responseList.stream( ).filter( response -> "X".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );
                     Response y = responseList.stream( ).filter( response -> "Y".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );

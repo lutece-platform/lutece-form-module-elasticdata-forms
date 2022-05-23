@@ -6,7 +6,7 @@
   <bean id="elasticdata-forms.formsDataSource" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormsDataSource">
     <property name="id" value="FormsDataSource" />
     <property name="name" value="Base de réponse(s) de formulaire(s)." />
-    <property name="targetIndexName" value="dev_formsdatasource" />
+    <property name="targetIndexName" value="formsdatasource" />
     <property name="mappings">
       <value><![CDATA[
                       {
