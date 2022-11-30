@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.elasticdata.modules.forms.util.Lambert93;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceIncrementalService;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormHome;
@@ -68,7 +67,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 /**
  * FormsDataSource
@@ -86,8 +84,6 @@ public class FormsDataSource extends AbstractDataSource
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE = "formResponse";
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE_HISTORY = "formResponseHistory";
     private static final String RESSOURCE_TYPE = "FORMS_FORM_RESPONSE";
-    private static final String DOCUMENT_USER_RESPONSES_FILED_NAME_PREFIX = "userResponses";
-    private static final String ENTRY_TYPE_GEOLOCATION = "entryTypeGeolocation";
     private static final String ENTRY_TYPE_CHECKBOX = "entryTypeCheckBox";
     private static final String ENTRY_TYPE_DATE = "entryTypeDate";
     private static final String ENTRY_TYPE_NUMBERING = "entryTypeNumbering";
@@ -378,16 +374,6 @@ public class FormsDataSource extends AbstractDataSource
                 {
                     userResponsesMultiValued.put( question.getId( ) + "." + questionTitle, responses );
                 }
-                if ( !responseList.isEmpty( ) && responseList.get( 0 ).getEntry( ).getEntryType( ).getBeanName( ).contains( ENTRY_TYPE_GEOLOCATION ) )
-                {
-                    Response x = responseList.stream( ).filter( response -> "X".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );
-                    Response y = responseList.stream( ).filter( response -> "Y".equals( response.getField( ).getValue( ) ) ).findAny( ).orElse( null );
-                    if ( x != null && y != null && NumberUtils.isCreatable( x.getResponseValue( ) ) && NumberUtils.isCreatable( y.getResponseValue( ) ) )
-                    {
-                        String geopoint = Lambert93.toLatLon( Double.parseDouble( x.getResponseValue( ) ), Double.parseDouble( y.getResponseValue( ) ) );
-                        userResponses.put( question.getId( ) + "." + question.getTitle( ) + ".elastic.geopoint", geopoint );
-                    }
-                }
             }
         }
         formResponseDataObject.setUserResponses( userResponses );
@@ -428,11 +414,6 @@ public class FormsDataSource extends AbstractDataSource
             entryType.put( "type", "long" );
             return entryType;
         }
-        if ( entryTypeBeanName.contains( ENTRY_TYPE_GEOLOCATION ) )
-        {
-            entryType.put( "type", "geo_point" );
-            return entryType;
-        }
         return null;
     }
 
@@ -453,10 +434,6 @@ public class FormsDataSource extends AbstractDataSource
                 if ( fieldMapping != null )
                 {
                     String key = question.getId( ) + "." + StringUtils.abbreviate( question.getTitle( ), 100 );
-                    if ( entryTypeBeanName.contains( ENTRY_TYPE_GEOLOCATION ) )
-                    {
-                        key = DOCUMENT_USER_RESPONSES_FILED_NAME_PREFIX + "." + key + ".elastic.geopoint";
-                    }
                     fields.put( key, fieldMapping );
                 }
             }
