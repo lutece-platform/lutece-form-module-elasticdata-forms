@@ -44,7 +44,11 @@ import fr.paris.lutece.plugins.forms.business.FormResponse;
 import fr.paris.lutece.plugins.forms.business.FormResponseHome;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.QuestionHome;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelect;
 import fr.paris.lutece.plugins.genericattributes.business.Response;
+import fr.paris.lutece.plugins.genericattributes.service.entrytype.EntryTypeServiceManager;
+import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.action.ActionFilter;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
@@ -352,11 +356,14 @@ public class FormsDataSource extends AbstractDataSource
                 String [ ] responses = { };
                 String questionTitle = StringUtils.abbreviate( question.getTitle( ), 100 );
                 List<Response> responseList = formQuestionResponse.getEntryResponse( );
+                IEntryTypeService entryType = null;
+
                 for ( Response response : responseList )
                 {
-                    if ( response.getField( ) != null )
+                    entryType = EntryTypeServiceManager.getEntryTypeService( response.getEntry( ) );
+                    if ( response.getField( ) != null && !( entryType instanceof EntryTypeSelect ) )
                     {
-                        if ( response.getEntry( ).getEntryType( ).getBeanName( ).contains( ENTRY_TYPE_CHECKBOX ) )
+                        if ( entryType instanceof EntryTypeCheckBox )
                         {
                             responses = ArrayUtils.add( responses, response.getResponseValue( ) );
                         }
