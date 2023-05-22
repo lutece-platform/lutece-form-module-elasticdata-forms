@@ -51,18 +51,12 @@ public class FormResponseDataObject extends AbstractDataObject
     private long _lTaskDuration;
     private long _lCompleteDuration;
     private String _strUnitName;
-    private Map<String, String> _mapUserResponses;
-    private Map<String, String [ ]> _mapUserResponsesMultiValued;
+    private Map<String, Object> _mapUserResponses;
     private String _strParentId;
     private String _strParentName;
     private String _strDocumentTypeName;
     private int _nFormResponseId;
     private String _strWorflowAdminCreator;
-
-    FormResponseDataObject( )
-    {
-        _strWorkflowState = "unknow";
-    }
 
     /**
      * Returns the Form response id
@@ -342,7 +336,7 @@ public class FormResponseDataObject extends AbstractDataObject
      * 
      * @return the map of customer identity attributes
      */
-    public Map<String, String> getUserResponses( )
+    public Map<String, Object> getUserResponses( )
     {
         return _mapUserResponses;
     }
@@ -352,29 +346,9 @@ public class FormResponseDataObject extends AbstractDataObject
      * 
      * @param mapCustomerIdentityAttributes
      */
-    public void setUserResponses( Map<String, String> mapUserResponses )
+    public void setUserResponses( Map<String, Object> mapUserResponses )
     {
         _mapUserResponses = mapUserResponses;
-    }
-
-    /**
-     * Get customer identity attributes
-     * 
-     * @return the map of customer identity attributes
-     */
-    public Map<String, String [ ]> getUserResponsesMultiValued( )
-    {
-        return _mapUserResponsesMultiValued;
-    }
-
-    /**
-     * Set the customer identity attributes map
-     * 
-     * @param _mapUserResponsesMultiValued
-     */
-    public void setUserResponsesMultiValued( Map<String, String [ ]> mapUserResponsesMultiValued )
-    {
-        _mapUserResponsesMultiValued = mapUserResponsesMultiValued;
     }
 
     /**

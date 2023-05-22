@@ -45,17 +45,21 @@ import fr.paris.lutece.plugins.forms.business.FormResponseHome;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.QuestionHome;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
-import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelect;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeGeolocation;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelectOrder;
+import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
+import fr.paris.lutece.plugins.genericattributes.business.Field;
+import fr.paris.lutece.plugins.genericattributes.business.FieldHome;
 import fr.paris.lutece.plugins.genericattributes.business.Response;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.EntryTypeServiceManager;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
+import fr.paris.lutece.plugins.genericattributes.util.GenericAttributesUtils;
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.action.ActionFilter;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistoryFilter;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
-import net.sf.json.JSONObject;
 import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
@@ -69,7 +73,6 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -88,11 +91,8 @@ public class FormsDataSource extends AbstractDataSource
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE = "formResponse";
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE_HISTORY = "formResponseHistory";
     private static final String RESSOURCE_TYPE = "FORMS_FORM_RESPONSE";
-    private static final String ENTRY_TYPE_CHECKBOX = "entryTypeCheckBox";
-    private static final String ENTRY_TYPE_DATE = "entryTypeDate";
-    private static final String ENTRY_TYPE_NUMBERING = "entryTypeNumbering";
-
     private static final int SQL_MAX_SELECT_IN = 80;
+    Map<Integer, String> _mapFields = new HashMap<>( );
 
     @Override
     public List<String> getIdDataObjects( )
@@ -110,6 +110,7 @@ public class FormsDataSource extends AbstractDataSource
     public synchronized List<DataObject> getDataObjects( List<String> listIdDataObjects )
     {
         List<DataObject> collResult = new Vector<>( );
+        _mapFields = new HashMap<>( );
         AtomicInteger counter = new AtomicInteger( );
         // split for db performance
         Map<Integer, List<String>> listIdDataObjectSplited = listIdDataObjects.stream( )
@@ -266,7 +267,6 @@ public class FormsDataSource extends AbstractDataSource
             FormResponseHistoryDataObject.setParentId( String.valueOf( resourceHistory.getWorkflow( ).getId( ) ) );
             FormResponseHistoryDataObject.setDocumentTypeName( DOCUMENT_TYPE_NAME_FORM_RESPONSE_HISTORY );
             FormResponseHistoryDataObject.setCompleteDuration( lCompleteDuration );
-            FormResponseHistoryDataObject.setUserResponsesMultiValued( formResponseDataObject.getUserResponsesMultiValued( ) );
             FormResponseHistoryDataObject.setUserResponses( formResponseDataObject.getUserResponses( ) );
             FormResponseHistoryDataObject.setWorflowAdminCreator( resourceHistory.getUserAccessCode( ) );
             Action action = listActions.stream( ).filter( action2 -> action2.getId( ) == resourceHistory.getAction( ).getId( ) ).findFirst( ).orElse( null );
@@ -335,56 +335,70 @@ public class FormsDataSource extends AbstractDataSource
     }
 
     /**
-     * set form question response list
-     * 
-     * @param nIdFormResponse
-     *            The FormResponse id
-     * @param nIdForm
-     *            The Form id
+     * Sets the user responses based on the form response data, form question responses, and a list of questions.
+     *
      * @param formResponseDataObject
+     *            The form response data object.
+     * @param formQuestionResponseList
+     *            The list of form question responses.
+     * @param listQuestion
+     *            The list of questions.
      */
     private void setUserResponses( FormResponseDataObject formResponseDataObject, List<FormQuestionResponse> formQuestionResponseList,
             List<Question> listQuestion )
     {
-        Map<String, String> userResponses = new HashMap<>( );
-        Map<String, String [ ]> userResponsesMultiValued = new HashMap<>( );
-        for ( FormQuestionResponse formQuestionResponse : formQuestionResponseList )
-        {
-            Question question = listQuestion.stream( ).filter( qa -> qa.getId( ) == formQuestionResponse.getQuestion( ).getId( ) ).findFirst( ).get( );
-            if ( question != null )
-            {
-                String [ ] responses = { };
-                String questionTitle = StringUtils.abbreviate( question.getTitle( ), 100 );
-                List<Response> responseList = formQuestionResponse.getEntryResponse( );
-                IEntryTypeService entryType = null;
+        Map<String, Object> userResponses = new HashMap<>( );
 
-                for ( Response response : responseList )
-                {
-                    entryType = EntryTypeServiceManager.getEntryTypeService( response.getEntry( ) );
-                    if ( response.getField( ) != null && !( entryType instanceof EntryTypeSelect ) )
+        formQuestionResponseList.forEach( formQuestionResponse -> listQuestion.stream( )
+                .filter( question -> question.getId( ) == formQuestionResponse.getQuestion( ).getId( ) ).findFirst( ).ifPresent( question -> {
+                    String baseKey = question.getId( ) + "." + StringUtils.abbreviate( question.getTitle( ), 100 );
+
+                    if ( !formQuestionResponse.getEntryResponse( ).isEmpty( ) )
                     {
-                        if ( entryType instanceof EntryTypeCheckBox )
+                        IEntryTypeService entryTypeService = EntryTypeServiceManager
+                                .getEntryTypeService( formQuestionResponse.getEntryResponse( ).get( 0 ).getEntry( ) );
+
+                        if ( entryTypeService instanceof EntryTypeCheckBox )
                         {
-                            responses = ArrayUtils.add( responses, response.getResponseValue( ) );
+                            List<String> responses = formQuestionResponse.getEntryResponse( ).stream( ).map( Response::getResponseValue )
+                                    .collect( Collectors.toList( ) );
+                            userResponses.put( baseKey, responses );
                         }
                         else
-                        {
-                            userResponses.put( question.getId( ) + "." + questionTitle + "." + response.getField( ).getIdField( ), response.getResponseValue( ) );
-                        }
+                            if ( entryTypeService instanceof EntryTypeSelectOrder )
+                            {
+                                List<String> responses = formQuestionResponse.getEntryResponse( ).stream( )
+                                        .sorted( Comparator.comparing( Response::getSortOrder ) ).map( Response::getResponseValue )
+                                        .collect( Collectors.toList( ) );
+                                userResponses.put( baseKey, responses );
+                            }
+                            else
+                                if ( entryTypeService instanceof EntryTypeGeolocation )
+                                {
+                                    Map<String, String> responses = formQuestionResponse.getEntryResponse( ).stream( ).collect( HashMap::new,
+                                            ( map, response ) -> {
+                                                Integer idField = response.getField( ).getIdField( );
+                                                String fieldCode = getFieldCode( idField );
+
+                                                if ( fieldCode != null )
+                                                {
+                                                    map.put( fieldCode, response.getResponseValue( ) );
+                                                }
+                                                else
+                                                {
+                                                    map.put( String.valueOf( idField ), response.getResponseValue( ) );
+                                                }
+                                            }, HashMap::putAll );
+                                    userResponses.put( baseKey, responses );
+                                }
+                                else
+                                {
+                                    formQuestionResponse.getEntryResponse( ).forEach( response -> userResponses.put( baseKey, response.getResponseValue( ) ) );
+                                }
                     }
-                    else
-                    {
-                        userResponses.put( question.getId( ) + "." + questionTitle, response.getResponseValue( ) );
-                    }
-                }
-                if ( responses.length > 0 )
-                {
-                    userResponsesMultiValued.put( question.getId( ) + "." + questionTitle, responses );
-                }
-            }
-        }
+                } ) );
+
         formResponseDataObject.setUserResponses( userResponses );
-        formResponseDataObject.setUserResponsesMultiValued( userResponsesMultiValued );
     }
 
     /**
@@ -398,59 +412,6 @@ public class FormsDataSource extends AbstractDataSource
     public void indexDocument( int nIdResource, int nIdTask )
     {
         DataSourceIncrementalService.addTask( DATA_SOURCE_NAME, String.valueOf( nIdResource ), nIdTask );
-    }
-
-    /**
-     * return elasticsearch field mapping
-     * 
-     * @param strEntryTypeName
-     *            Entry type name
-     * @return elasticsearch field mapping
-     */
-    private static JSONObject getFieldMappingFromBeanName( String entryTypeBeanName )
-    {
-        JSONObject entryType = new JSONObject( );
-        if ( entryTypeBeanName.contains( ENTRY_TYPE_DATE ) )
-        {
-            entryType.put( "type", "date" );
-            entryType.put( "format", "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis" );
-            return entryType;
-        }
-        if ( entryTypeBeanName.contains( ENTRY_TYPE_NUMBERING ) )
-        {
-            entryType.put( "type", "long" );
-            return entryType;
-        }
-        return null;
-    }
-
-    @Override
-    public String getMappings( )
-    {
-        List<Form> forms = FormHome.getFormList( );
-        JSONObject fields = new JSONObject( );
-        for ( Form form : forms )
-        {
-            List<OptionalQuestionIndexation> optionalQuestionIndexations = OptionalQuestionIndexationHome
-                    .getOptionalQuestionIndexationListByFormId( form.getId( ) );
-            for ( OptionalQuestionIndexation optionalQuestionIndexation : optionalQuestionIndexations )
-            {
-                Question question = QuestionHome.findByPrimaryKey( optionalQuestionIndexation.getIdQuestion( ) );
-                String entryTypeBeanName = question.getEntry( ).getEntryType( ).getBeanName( );
-                JSONObject fieldMapping = getFieldMappingFromBeanName( entryTypeBeanName );
-                if ( fieldMapping != null )
-                {
-                    String key = question.getId( ) + "." + StringUtils.abbreviate( question.getTitle( ), 100 );
-                    fields.put( key, fieldMapping );
-                }
-            }
-        }
-        fields.put( "timestamp", getFieldMappingFromBeanName( ENTRY_TYPE_DATE ) );
-        JSONObject properties = new JSONObject( );
-        properties.put( "properties", fields );
-        JSONObject mappings = new JSONObject( );
-        mappings.put( "mappings", properties );
-        return mappings.toString( );
     }
 
     /**
@@ -468,4 +429,31 @@ public class FormsDataSource extends AbstractDataSource
         long milliseconds2 = end.getTime( );
         return milliseconds2 - milliseconds1;
     }
+
+    /**
+     * Retrieves the field code for the specified field ID.
+     *
+     * @param nIdField
+     *            The ID of the field.
+     * @return The field code associated with the specified ID, or null if not found.
+     */
+    public String getFieldCode( int nIdField )
+    {
+        if ( _mapFields.isEmpty( ) )
+        {
+
+            List<Form> listForms = FormHome.getFormList( );
+
+            Map<Integer, String> mapIdEntry = new HashMap<>( );
+            for ( Form form : listForms )
+            {
+                mapIdEntry.putAll( EntryHome.findEntryByForm( GenericAttributesUtils.getPlugin( ), form.getId( ) ) );
+            }
+            List<Integer> listIdEntry = mapIdEntry.keySet( ).stream( ).collect( Collectors.toList( ) );
+            _mapFields = FieldHome.getFieldListByListIdEntry( listIdEntry ).stream( ).collect( Collectors.toMap( Field::getIdField, Field::getCode ) );
+        }
+
+        return _mapFields.get( nIdField );
+    }
+
 }
