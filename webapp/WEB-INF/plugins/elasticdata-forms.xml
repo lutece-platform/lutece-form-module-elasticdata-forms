@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>elasticdata-forms</name>
     <class>fr.paris.lutece.plugins.elasticdata.modules.forms.service.ElasticDataFormsPlugin</class>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.7</version>
     <documentation/>
     <installation/>
     <changes/>
