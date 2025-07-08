@@ -47,6 +47,7 @@ import fr.paris.lutece.plugins.forms.business.QuestionHome;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeGeolocation;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelectOrder;
+import fr.paris.lutece.plugins.forms.web.FormResponseData;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
 import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.plugins.genericattributes.business.FieldHome;
@@ -63,6 +64,10 @@ import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
+import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
+
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -186,6 +191,20 @@ public class FormsDataSource extends AbstractDataSource
             formResponseDataObject.setParentId( String.valueOf( form.getId( ) ) );
             formResponseDataObject.setParentName( form.getTitle( ) );
             formResponseDataObject.setDocumentTypeName( DOCUMENT_TYPE_NAME_FORM_RESPONSE );
+            
+            IStateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
+		        
+	        if ( stateService != null )
+	        {
+	            State formResponseState = stateService.findByResource( formResponse.getId( ), FormResponse.RESOURCE_TYPE, form.getIdWorkflow( ) );
+	            if ( formResponseState != null )
+	            {
+	            	formResponseDataObject.setWorkflowState( formResponseState.getName( ) );
+	            }
+	        }
+            
+            
+            
             setLastResourceHistory( formResponseDataObject, listStates, listActions, lastRessourceHistory, formResponseCreation );
             setUserResponses( formResponseDataObject, listFormResponseQuestionResponse, listQuestions );
 
