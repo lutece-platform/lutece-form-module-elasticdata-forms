@@ -48,18 +48,6 @@
             <version>[1.0.3-SNAPSHOT,3.9.9)</version>
             <type>lutece-plugin</type>
         </dependency>
-        <dependency>
-            <groupId>fr.paris.lutece.plugins</groupId>
-            <artifactId>module-forms-unittree</artifactId>
-            <version>[1.0.0-SNAPSHOT,2.9.9)</version>
-            <type>lutece-plugin</type>
-        </dependency>
-        <dependency>
-            <groupId>fr.paris.lutece.plugins</groupId>
-            <artifactId>module-workflow-unittree</artifactId>
-            <version>[1.0.1-SNAPSHOT,2.9.9)</version>
-            <type>lutece-plugin</type>
-        </dependency>
     </dependencies>
     <properties>
         <componentName>module-elasticdata-forms</componentName>
