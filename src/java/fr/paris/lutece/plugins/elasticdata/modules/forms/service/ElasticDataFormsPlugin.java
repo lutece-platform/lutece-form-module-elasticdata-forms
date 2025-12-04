@@ -34,32 +34,18 @@
 package fr.paris.lutece.plugins.elasticdata.modules.forms.service;
 
 import java.io.Serializable;
-import fr.paris.lutece.portal.service.event.ResourceEventManager;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
  * class FormPlugin
  */
 public final class ElasticDataFormsPlugin extends PluginDefaultImplementation implements Serializable
 {
-    private static final long serialVersionUID = 3800926921482494176L;
+    private static final long serialVersionUID = 3800926921482494177L;
     /** The Constant PLUGIN_NAME. */
     public static final String PLUGIN_NAME = "elasticdata-forms";
-    // Generated serial UID
-    // Beans
-    private static final String BEAN_FORM_RESPONSE_EVENT_LISTENER = "elasticdata-forms.FormResponseIndexerEventListener";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void init( )
-    {
-        ResourceEventManager.register( SpringContextService.getBean( BEAN_FORM_RESPONSE_EVENT_LISTENER ) );
-    }
 
     /**
      * Return the plugin

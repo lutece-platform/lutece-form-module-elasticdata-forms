@@ -35,7 +35,7 @@ package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ import java.util.List;
 public final class OptionalQuestionIndexationHome
 {
     // Static variable pointed at the DAO instance
-    private static IOptionalQuestionIndexationDAO _dao = SpringContextService.getBean( "elasticdata-forms.optionalQuestionIndexationDAO" );
+    private static IOptionalQuestionIndexationDAO _dao = CDI.current( ).select( IOptionalQuestionIndexationDAO.class ).get( );
     private static Plugin _plugin = PluginService.getPlugin( "elasticdata-forms" );
 
     /**
@@ -108,7 +108,7 @@ public final class OptionalQuestionIndexationHome
     /**
      * Returns an instance of a optionalQuestionIndexation whose identifier is specified in parameter
      * 
-     * @param nKey
+     * @param nQuestionId
      *            The optionalQuestionIndexation primary key
      * @return an instance of OptionalQuestionIndexation
      */

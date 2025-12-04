@@ -35,6 +35,8 @@ package fr.paris.lutece.plugins.elasticdata.modules.forms.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.util.sql.DAOUtil;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,7 @@ import java.util.List;
 /**
  * This class provides Data Access methods for OptionalQuestionIndexation objects
  */
+@ApplicationScoped
 public final class OptionalQuestionIndexationDAO implements IOptionalQuestionIndexationDAO
 {
     // Constants
@@ -154,7 +157,7 @@ public final class OptionalQuestionIndexationDAO implements IOptionalQuestionInd
     @Override
     public List<OptionalQuestionIndexation> selectOptionalQuestionIndexationsList( Plugin plugin )
     {
-        List<OptionalQuestionIndexation> optionalQuestionIndexationList = new ArrayList<OptionalQuestionIndexation>( );
+        List<OptionalQuestionIndexation> optionalQuestionIndexationList = new ArrayList<>( );
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin ) )
         {
             daoUtil.executeQuery( );
@@ -177,7 +180,7 @@ public final class OptionalQuestionIndexationDAO implements IOptionalQuestionInd
     @Override
     public List<OptionalQuestionIndexation> selectOptionalQuestionIndexationsListByFormId( int nFormId, Plugin plugin )
     {
-        List<OptionalQuestionIndexation> optionalQuestionIndexationList = new ArrayList<OptionalQuestionIndexation>( );
+        List<OptionalQuestionIndexation> optionalQuestionIndexationList = new ArrayList<>( );
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL_BY_FORM_ID, plugin ) )
         {
             daoUtil.setInt( 1, nFormId );
@@ -201,7 +204,7 @@ public final class OptionalQuestionIndexationDAO implements IOptionalQuestionInd
     @Override
     public List<Integer> selectIdOptionalQuestionIndexationsList( Plugin plugin )
     {
-        List<Integer> optionalQuestionIndexationList = new ArrayList<Integer>( );
+        List<Integer> optionalQuestionIndexationList = new ArrayList<>( );
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL_ID, plugin ) )
         {
             daoUtil.executeQuery( );

@@ -72,12 +72,16 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * FormsDataSource
  */
+@ApplicationScoped
 public class FormsDataSource extends AbstractDataSource
 {
     @Inject
@@ -93,12 +97,26 @@ public class FormsDataSource extends AbstractDataSource
     private static final String RESSOURCE_TYPE = "FORMS_FORM_RESPONSE";
     private static final int SQL_MAX_SELECT_IN = 80;
     Map<Integer, String> _mapFields = new HashMap<>( );
+    
+    public FormsDataSource( ){}
+
+    @Inject
+    public FormsDataSource( @ConfigProperty( name = "elasticdata-forms.formsDataSource.id" ) String strDataSourceId,
+    		@ConfigProperty( name = "elasticdata-forms.formsDataSource.name" ) String strDataSourceName,
+    		@ConfigProperty( name = "elasticdata-forms.formsDataSource.targetIndexName" ) String strDataSourceTargetIndexName,
+    		@ConfigProperty( name = "elasticdata-forms.formsDataSource.mappings" ) String strDataSourceMappings )
+    {
+        setId( strDataSourceId );
+        setName( strDataSourceName );
+        setTargetIndexName( strDataSourceTargetIndexName );
+        setMappings( strDataSourceMappings );
+    }
 
     @Override
     public List<String> getIdDataObjects( )
     {
         List<Form> listForms = FormHome.getFormList( );
-        List<Integer> listFormResponseId = new ArrayList<Integer>( );
+        List<Integer> listFormResponseId = new ArrayList<>( );
         listForms.parallelStream( ).forEach( form -> {
             List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
             listFormResponseId.addAll( listFormResponses.parallelStream( ).map( i -> i.getId( ) ).distinct( ).collect( Collectors.toList( ) ) );
@@ -193,7 +211,7 @@ public class FormsDataSource extends AbstractDataSource
                     getFormResponseHistory( formResponseDataObject, listResourceHistoryFiltred, formResponse.getCreation( ), listActions, listStates ) );
             formResponseDataObjectList.add( formResponseDataObject );
         }
-        ;
+
         return formResponseDataObjectList;
     }
 
@@ -282,7 +300,7 @@ public class FormsDataSource extends AbstractDataSource
             lstartingDateDuration = resourceHistory.getCreationDate( );
             formResponseDataObjectList.add( FormResponseHistoryDataObject );
         }
-        ;
+
         return formResponseDataObjectList;
     }
 
