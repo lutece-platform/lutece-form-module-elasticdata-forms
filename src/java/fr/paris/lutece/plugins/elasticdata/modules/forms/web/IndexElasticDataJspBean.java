@@ -35,9 +35,12 @@ package fr.paris.lutece.plugins.elasticdata.modules.forms.web;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexation;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexationHome;
@@ -50,16 +53,18 @@ import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.plugins.forms.business.StepHome;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
-import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
+import fr.paris.lutece.portal.web.cdi.mvc.Models;
 
 /**
  * ManageElasticData JSP Bean abstract class for JSP Bean
  */
+@RequestScoped
+@Named
 @Controller( controllerJsp = "IndexingAppElasticData.jsp", controllerPath = "jsp/admin/plugins/elasticdata/modules/forms", right = "ELASTICDATA_FORMS_MANAGEMENT" )
 public class IndexElasticDataJspBean extends MVCAdminJspBean
 {
@@ -84,6 +89,9 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     private static final String PARAMETER_FORM_ID = "idForm";
 
     private static final long serialVersionUID = 1L;
+    
+    @Inject
+    private Models _model;
 
     /**
      * View the home of the feature
@@ -95,10 +103,9 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_FORMS_INDEXATION, defaultView = true )
     public String getManageFromsIndexation( HttpServletRequest request )
     {
-        Map<String, Object> model = getModel( );
         List<Form> listForms = FormHome.getFormList( );
-        model.put( MARK_FORM_LIST, listForms );
-        return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MANAGE_FORMS_INDEXATION, model );
+        _model.put( MARK_FORM_LIST, listForms );
+        return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MANAGE_FORMS_INDEXATION, _model );
     }
 
     /**
@@ -111,7 +118,6 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     @View( value = VIEW_MODIFY_FORM_INDEXATION )
     public String getModifyFormIndexation( HttpServletRequest request )
     {
-        Map<String, Object> model = getModel( );
         String strIdForm = request.getParameter( PARAMETER_FORM_ID );
         int nIdFrom = Integer.valueOf( strIdForm );
         LinkedHashMap<Step, List<Question>> stepWithQuestionList = new LinkedHashMap<>( );
@@ -131,10 +137,10 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
             stepWithQuestionList.put( step, stepQuestionList );
         }
 
-        model.put( MARK_OPTIONAL_QUESTION_INDEXATION_LIST, OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdFrom ) );
-        model.put( MARK_FORM, form );
-        model.put( MARK_FORM_STEP_QUESTION_LIST, stepWithQuestionList );
-        return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MODIFY_INDEXATION, model );
+        _model.put( MARK_OPTIONAL_QUESTION_INDEXATION_LIST, OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdFrom ) );
+        _model.put( MARK_FORM, form );
+        _model.put( MARK_FORM_STEP_QUESTION_LIST, stepWithQuestionList );
+        return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MODIFY_INDEXATION, _model );
     }
 
     /**
@@ -145,7 +151,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * @return The redirected page
      */
     @Action( ACTION_INDEX )
-    public String doIndex( HttpServletRequest request ) throws ElasticClientException
+    public String doIndex( HttpServletRequest request )
     {
         StringBuilder sbLogs = new StringBuilder( );
         String strDataSourceId = request.getParameter( PARAMETER_DATA_SOURCE );
@@ -163,7 +169,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * @return The redirected page
      */
     @Action( ACTION_MODIFY_FORM_INDEXATION )
-    public String doModifyFormIndexation( HttpServletRequest request ) throws ElasticClientException
+    public String doModifyFormIndexation( HttpServletRequest request )
     {
         String strIdForm = request.getParameter( PARAMETER_FORM_ID );
         int nIdFrom = Integer.valueOf( strIdForm );

@@ -1,10 +1,9 @@
-<jsp:useBean id="manageelasticdataapp" scope="session" class="fr.paris.lutece.plugins.elasticdata.modules.forms.web.IndexElasticDataJspBean" />
-<% String strContent = manageelasticdataapp.processController ( request , response ); %>
-
-
 <%@ page errorPage="../../../../ErrorPage.jsp" %>
+
+${ pageContext.setAttribute( 'strContent', indexElasticDataJspBean.processController( pageContext.request , pageContext.response ) ) }
+
 <jsp:include page="../../../../AdminHeader.jsp" />
 
-<%= strContent %>
+${ pageContext.getAttribute( 'strContent' ) }
 
 <%@ include file="../../../../AdminFooter.jsp" %>

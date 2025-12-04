@@ -34,76 +34,55 @@
 package fr.paris.lutece.plugins.elasticdata.modules.forms.service.listener;
 
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormsDataSource;
-import fr.paris.lutece.plugins.forms.business.FormResponse;
 import fr.paris.lutece.plugins.forms.business.form.search.IndexerAction;
-import fr.paris.lutece.portal.business.event.EventRessourceListener;
-import fr.paris.lutece.portal.business.event.ResourceEvent;
-import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.plugins.forms.service.event.FormResponseEvent;
+import fr.paris.lutece.portal.service.event.EventAction;
+import fr.paris.lutece.portal.service.event.Type;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
+import jakarta.inject.Inject;
 
-public class FormResponseIndexerEventListener implements EventRessourceListener
+@ApplicationScoped
+public class FormResponseIndexerEventListener
 {
-    private static final String CONSTANT_FORM_RESPONSE_LISTENER_NAME = "FormResponseIndexerEventListener";
-    FormsDataSource _formsDataSource = new FormsDataSource( );
+    @Inject
+    FormsDataSource _formsDataSource;
 
-    @Override
-    public String getName( )
+    /**
+     * handle the event for the added formResponse
+     * 
+     * @param event
+     *            the event for the added formResponse
+     */
+    public void addedFormResponse( @ObservesAsync @Type(EventAction.CREATE) FormResponseEvent event )
     {
-        return CONSTANT_FORM_RESPONSE_LISTENER_NAME;
+    	indexFormResponse( event, IndexerAction.TASK_CREATE );
+    }
+    
+    /**
+     * handle the event for the updated formResponse
+     * 
+     * @param event
+     *            the event for the updated formResponse
+     */
+    public void updatedFormResponse( @ObservesAsync @Type(EventAction.UPDATE) FormResponseEvent event )
+    {
+        indexFormResponse( event, IndexerAction.TASK_CREATE );
     }
 
     /**
-     * {@inheritDoc}
+     * handle the event for the deleted formResponse
+     * 
+     * @param event
+     *            the event for the deleted formResponse
      */
-    @Override
-    public void addedResource( ResourceEvent event )
+    public void deletedFormResponse( @ObservesAsync @Type(EventAction.REMOVE) FormResponseEvent event )
     {
-        new Thread( ( ) -> {
-            indexResource( event, IndexerAction.TASK_CREATE );
-        } ).start( );
+    	indexFormResponse( event, IndexerAction.TASK_DELETE );
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void deletedResource( ResourceEvent event )
+    private void indexFormResponse( FormResponseEvent event, int nIdTask )
     {
-        new Thread( ( ) -> {
-            indexResource( event, IndexerAction.TASK_DELETE );
-        } ).start( );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updatedResource( ResourceEvent event )
-    {
-        new Thread( ( ) -> {
-            // indexResource( event, IndexerAction.TASK_MODIFY );
-            indexResource( event, IndexerAction.TASK_CREATE );
-        } ).start( );
-    }
-
-    private void indexResource( ResourceEvent event, int nIdTask )
-    {
-        if ( !checkResourceType( event ) )
-        {
-            return;
-        }
-        try
-        {
-            int nIdResource = Integer.parseInt( event.getIdResource( ) );
-            _formsDataSource.indexDocument( nIdResource, nIdTask );
-        }
-        catch( NumberFormatException e )
-        {
-            AppLogService.error( "Unable to parse given event id resource to integer " + event.getIdResource( ), e );
-        }
-    }
-
-    private boolean checkResourceType( ResourceEvent event )
-    {
-        return FormResponse.RESOURCE_TYPE.equals( event.getTypeResource( ) );
+    	_formsDataSource.indexDocument( event.getFormResponseId( ), nIdTask );
     }
 }
