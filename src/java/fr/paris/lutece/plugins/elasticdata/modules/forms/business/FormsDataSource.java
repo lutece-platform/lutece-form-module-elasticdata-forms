@@ -45,7 +45,9 @@ import fr.paris.lutece.plugins.forms.business.FormResponseHome;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.QuestionHome;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeFile;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeGeolocation;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeRadioButton;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelectOrder;
 import fr.paris.lutece.plugins.forms.web.FormResponseData;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
@@ -65,7 +67,10 @@ import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
 import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
+import fr.paris.lutece.portal.service.file.FileService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppPathService;
+import fr.paris.lutece.util.url.UrlItem;
 
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -409,6 +414,20 @@ public class FormsDataSource extends AbstractDataSource
                                                 }
                                             }, HashMap::putAll );
                                     userResponses.put( baseKey, responses );
+                                }
+                                else if ( entryTypeService instanceof EntryTypeFile )
+                                {	
+                                	Map<String, String> responses = formQuestionResponse.getEntryResponse( ).stream( ).collect( HashMap::new,
+                                            ( map, response ) -> {
+                                            	
+                                            	if ( response.getFile() != null )
+                                            	{
+                                            		response.getFile().getFileKey();
+                                            		UrlItem strFileDownloadUrlBO = new UrlItem("");
+                                            		strFileDownloadUrlBO = new UrlItem( AppPathService.getProdUrl( "" ) + FileService.getInstance( ).getFileStoreServiceProvider( response.getFile().getOrigin() ).getFileDownloadUrlBO( response.getFile().getFileKey() ) );
+                                            		userResponses.put( "fichierURLFileService", strFileDownloadUrlBO.getUrl( ) );
+                                            	}
+                                            }, HashMap::putAll );
                                 }
                                 else
                                 {
