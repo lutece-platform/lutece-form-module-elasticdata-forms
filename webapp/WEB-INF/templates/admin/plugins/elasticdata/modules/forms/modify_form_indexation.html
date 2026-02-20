@@ -15,6 +15,15 @@
                     </#list>
                 </@formGroup>
             </#list>
+            
+            <@formGroup labelKey='#i18n{module.elasticdata.forms.modify_form.status}'>
+			    <#list form_status_list as status>
+			    	<#assign checkedValue=getCheckedValueStatus( status.id )>
+			        <@btnGroupRadioCheckbox type='checkbox' color='default' name='status${status.id}'
+			     	   id='status${status.id}' value='${status.id}' labelParams='' labelFor='${status.id}'
+			           labelKey=' ${status.name}' checked=checkedValue />
+			    </#list>
+            </@formGroup>
             <@actionButtons button1Name="action_modifyFormIndexation" button2Name="view_manageFormsIndexation" />
         </@tform>
     </@boxBody>
@@ -23,6 +32,17 @@
     <#if optional_question_indexation_list?has_content>
         <#list optional_question_indexation_list as optionalQuestion>
             <#if optionalQuestion.idQuestion=questionId>
+                <#return true>
+            </#if>
+        </#list>
+    </#if>
+    <#return false>
+</#function>
+
+<#function getCheckedValueStatus statusId>
+    <#if optional_status_indexation_list?has_content>
+        <#list optional_status_indexation_list as optionalStatus>
+            <#if optionalStatus.idStatus=statusId>
                 <#return true>
             </#if>
         </#list>

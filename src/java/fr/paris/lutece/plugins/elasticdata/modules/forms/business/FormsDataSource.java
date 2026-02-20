@@ -172,6 +172,9 @@ public class FormsDataSource extends AbstractDataSource
         List<Integer> optionalQuestionIndexations = OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdForm ).stream( )
                 .map( OptionalQuestionIndexation::getIdQuestion ).collect( Collectors.toList( ) );
         List<Question> listQuestions = QuestionHome.findByPrimaryKeyList( optionalQuestionIndexations );
+        
+        List<Integer> optionalStatusIndexations = OptionalStatusIndexationHome.getOptionalStatusIndexationListByFormId( nIdForm ).stream( )
+                .map( OptionalStatusIndexation::getIdStatus ).collect( Collectors.toList( ) );
 
         for ( FormResponse formResponse : listformResponse )
         {
@@ -205,6 +208,8 @@ public class FormsDataSource extends AbstractDataSource
 	            if ( formResponseState != null )
 	            {
 	            	formResponseDataObject.setWorkflowState( formResponseState.getName( ) );
+	            	if ( !optionalStatusIndexations.contains( formResponseState.getId() ) )
+	            		continue;
 	            }
 	        }
             
