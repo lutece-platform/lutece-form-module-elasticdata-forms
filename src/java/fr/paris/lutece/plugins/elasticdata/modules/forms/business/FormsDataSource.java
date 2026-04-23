@@ -63,6 +63,8 @@ import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
+import fr.paris.lutece.portal.service.util.AppLogService;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -70,9 +72,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.concurrent.ManagedExecutorService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +95,8 @@ public class FormsDataSource extends AbstractDataSource
     private IResourceHistoryService _resourceHistoryService;
     @Inject
     private IStateService _stateService;
+    @Inject
+    private ManagedExecutorService _managedExecutor;
 
     private static final String DATA_SOURCE_NAME = "FormsDataSource";
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE = "formResponse";
@@ -116,12 +123,32 @@ public class FormsDataSource extends AbstractDataSource
     public List<String> getIdDataObjects( )
     {
         List<Form> listForms = FormHome.getFormList( );
-        List<Integer> listFormResponseId = new ArrayList<>( );
-        listForms.parallelStream( ).forEach( form -> {
-            List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
-            listFormResponseId.addAll( listFormResponses.parallelStream( ).map( i -> i.getId( ) ).distinct( ).collect( Collectors.toList( ) ) );
-        } );
-        return listFormResponseId.stream( ).map( Object::toString ).collect( Collectors.toList( ) );
+        List<Future<List<Integer>>> futures = new ArrayList<>( );
+        for ( Form form : listForms )
+        {
+            futures.add( _managedExecutor.submit( ( ) -> {
+                List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
+                return listFormResponses.stream( ).map( FormResponse::getId ).distinct( ).collect( Collectors.toList( ) );
+            } ) );
+        }
+
+        List<String> result = new ArrayList<>( );
+        try
+        {
+            // Collect results from all futures
+            for ( Future<List<Integer>> future : futures )
+            {
+                for ( Integer id : future.get( ) )
+                {
+                    result.add( id.toString( ) );
+                }
+            }
+        }
+        catch( InterruptedException | ExecutionException e )
+        {
+            AppLogService.error( "Unexpected error during data objects ids retrieval", e );
+        }
+        return result;
     }
 
     @Override
@@ -133,23 +160,42 @@ public class FormsDataSource extends AbstractDataSource
         // split for db performance
         Map<Integer, List<String>> listIdDataObjectSplited = listIdDataObjects.stream( )
                 .collect( Collectors.groupingBy( it -> counter.getAndIncrement( ) / SQL_MAX_SELECT_IN ) );
+        
+        List<Future<List<DataObject>>> futures = new ArrayList<>( );
+        for ( Map.Entry<?, List<String>> e : listIdDataObjectSplited.entrySet( ) )
+        {
+            futures.add( _managedExecutor.submit( ( ) -> {
+                List<Integer> listIdFormResponse = e.getValue( ).stream( ).map( x -> Integer.valueOf( x ) ).collect( Collectors.toList( ) );
+                List<FormResponse> formResponseList = FormResponseHome.getFormResponseUncompleteByPrimaryKeyList( listIdFormResponse );
+                List<FormQuestionResponse> listFormQuestionResponse = FormQuestionResponseHome
+                        .getFormQuestionResponseListByFormResponseList( listIdFormResponse );
+                List<List<FormResponse>> listFormFormResponse = formResponseList.stream( )
+                        .collect( Collectors.groupingBy( FormResponse::getFormId, Collectors.toList( ) ) ).values( ).stream( ).collect( Collectors.toList( ) );
 
-        listIdDataObjectSplited.entrySet( ).parallelStream( ).forEach( e -> {
+                List<DataObject> partialResult = new ArrayList<>( );
+                for ( List<FormResponse> listformResponse : listFormFormResponse )
+                {
+                    Form form = FormHome.findByPrimaryKey( listformResponse.get( 0 ).getFormId( ) );
+                    List<ResourceHistory> listResourceHistory = getResourceHistoryList( listIdFormResponse, form.getIdWorkflow( ) );
+                    partialResult.addAll( getDataObjects( listformResponse, listFormQuestionResponse, listResourceHistory, form ) );
+                }
+                return partialResult;
+            } ) );
+        }
 
-            List<Integer> listIdFormResponse = e.getValue( ).stream( ).map( x -> Integer.valueOf( x ) ).collect( Collectors.toList( ) );
-            List<FormResponse> formResponseList = FormResponseHome.getFormResponseUncompleteByPrimaryKeyList( listIdFormResponse );
-            List<FormQuestionResponse> listFormQuestionResponse = FormQuestionResponseHome.getFormQuestionResponseListByFormResponseList( listIdFormResponse );
-            List<List<FormResponse>> listFormFormResponse = formResponseList.stream( )
-                    .collect( Collectors.groupingBy( FormResponse::getFormId, Collectors.toList( ) ) ).values( ).stream( ).collect( Collectors.toList( ) );
-
-            for ( List<FormResponse> listformResponse : listFormFormResponse )
+        // Collect results from all futures
+        try
+        {
+            for ( Future<List<DataObject>> future : futures )
             {
-                Form form = FormHome.findByPrimaryKey( listformResponse.get( 0 ).getFormId( ) );
-                List<ResourceHistory> listResourceHistory = getResourceHistoryList( listIdFormResponse, form.getIdWorkflow( ) );
-
-                collResult.addAll( getDataObjects( listformResponse, listFormQuestionResponse, listResourceHistory, form ) );
+                collResult.addAll( future.get( ) );
             }
-        } );
+        }
+        catch( InterruptedException | ExecutionException e )
+        {
+            AppLogService.error( "Unexpected error during data objects retrieval", e );
+        }
+        
         return collResult;
     }
 
