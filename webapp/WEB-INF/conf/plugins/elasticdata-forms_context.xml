@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
   <bean id="elasticdata-forms.FormResponseIndexerEventListener" class="fr.paris.lutece.plugins.elasticdata.modules.forms.service.listener.FormResponseIndexerEventListener" />
   <bean id="elasticdata-forms.optionalQuestionIndexationDAO" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexationDAO"/>
-  <bean id="workflowstatus.optionalStatusIndexationDAO" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalStatusIndexationDAO" />
+  <bean id="elasticdata-forms.optionalStatusIndexationDAO" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalStatusIndexationDAO" />
   <bean id="elasticdata-forms.formsDataSource" class="fr.paris.lutece.plugins.elasticdata.modules.forms.business.FormsDataSource">
     <property name="id" value="FormsDataSource" />
     <property name="name" value="Base de réponse(s) de formulaire(s)." />

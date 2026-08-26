@@ -50,8 +50,8 @@ import java.util.Optional;
 public final class OptionalStatusIndexationHome
 {
     // Static variable pointed at the DAO instance
-    private static IOptionalStatusIndexationDAO _dao = SpringContextService.getBean( "workflowstatus.optionalStatusIndexationDAO" );
-    private static Plugin _plugin = PluginService.getPlugin( "workflowstatus" );
+    private static IOptionalStatusIndexationDAO _dao = SpringContextService.getBean( "elasticdata-forms.optionalStatusIndexationDAO" );
+    private static Plugin _plugin = PluginService.getPlugin( "elasticdata-forms" );
 
     /**
      * Private constructor - this class need not be instantiated
