@@ -45,6 +45,7 @@ import fr.paris.lutece.plugins.forms.business.FormResponseHome;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.QuestionHome;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeFile;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeGeolocation;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelectOrder;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
@@ -63,7 +64,10 @@ import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
+import fr.paris.lutece.portal.service.file.FileService;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPathService;
+import fr.paris.lutece.util.url.UrlItem;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -98,11 +102,15 @@ public class FormsDataSource extends AbstractDataSource
     @Inject
     private ManagedExecutorService _managedExecutor;
 
+    @Inject
+    private FileService _fileService;
+
     private static final String DATA_SOURCE_NAME = "FormsDataSource";
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE = "formResponse";
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE_HISTORY = "formResponseHistory";
     private static final String RESSOURCE_TYPE = "FORMS_FORM_RESPONSE";
     private static final int SQL_MAX_SELECT_IN = 80;
+    private static final String MARK_FILE_URL_FILE_SERVICE = "fichierURLFileService";
     Map<Integer, String> _mapFields = new HashMap<>( );
     
     public FormsDataSource( ){}
@@ -227,6 +235,9 @@ public class FormsDataSource extends AbstractDataSource
                 .map( OptionalQuestionIndexation::getIdQuestion ).collect( Collectors.toList( ) );
         List<Question> listQuestions = QuestionHome.findByPrimaryKeyList( optionalQuestionIndexations );
 
+        List<Integer> optionalStatusIndexations = OptionalStatusIndexationHome.getOptionalStatusIndexationListByFormId( nIdForm ).stream( )
+                .map( OptionalStatusIndexation::getIdStatus ).collect( Collectors.toList( ) );
+
         for ( FormResponse formResponse : listformResponse )
         {
             int formResponseId = formResponse.getId( );
@@ -250,6 +261,19 @@ public class FormsDataSource extends AbstractDataSource
             formResponseDataObject.setParentId( String.valueOf( form.getId( ) ) );
             formResponseDataObject.setParentName( form.getTitle( ) );
             formResponseDataObject.setDocumentTypeName( DOCUMENT_TYPE_NAME_FORM_RESPONSE );
+
+            State formResponseState = _stateService.findByResource( formResponseId, RESSOURCE_TYPE, nIdWorkflow );
+
+            if ( formResponseState != null )
+            {
+                formResponseDataObject.setWorkflowState( formResponseState.getName( ) );
+
+                if ( !optionalStatusIndexations.contains( formResponseState.getId( ) ) )
+                {
+                    continue;
+                }
+            }
+
             setLastResourceHistory( formResponseDataObject, listStates, listActions, lastRessourceHistory, formResponseCreation );
             setUserResponses( formResponseDataObject, listFormResponseQuestionResponse, listQuestions );
 
@@ -456,9 +480,23 @@ public class FormsDataSource extends AbstractDataSource
                                     userResponses.put( baseKey, responses );
                                 }
                                 else
-                                {
-                                    formQuestionResponse.getEntryResponse( ).forEach( response -> userResponses.put( baseKey, response.getResponseValue( ) ) );
-                                }
+                                    if ( entryTypeService instanceof EntryTypeFile )
+                                    {
+                                        formQuestionResponse.getEntryResponse( ).forEach( response -> {
+                                            if ( response.getFile( ) != null )
+                                            {
+                                                UrlItem urlFileDownloadBO = new UrlItem( AppPathService.getProdUrl( StringUtils.EMPTY )
+                                                        + _fileService.getFileStoreServiceProvider( response.getFile( ).getOrigin( ) )
+                                                                .getFileDownloadUrlBO( response.getFile( ).getFileKey( ) ) );
+                                                userResponses.put( MARK_FILE_URL_FILE_SERVICE, urlFileDownloadBO.getUrl( ) );
+                                            }
+                                        } );
+                                    }
+                                    else
+                                    {
+                                        formQuestionResponse.getEntryResponse( )
+                                                .forEach( response -> userResponses.put( baseKey, response.getResponseValue( ) ) );
+                                    }
                     }
                 } ) );
 

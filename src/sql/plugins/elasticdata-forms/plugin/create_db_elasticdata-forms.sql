@@ -13,3 +13,15 @@ id_form int default 0 NOT NULL,
 id_question int default 0 NOT NULL,
 PRIMARY KEY (id_optional_question_indexation)
 );
+
+--
+-- Structure for table elasticdata_forms_optionalstatus
+--
+
+DROP TABLE IF EXISTS elasticdata_forms_optionalstatus;
+CREATE TABLE elasticdata_forms_optionalstatus (
+id_optional_status_indexation int AUTO_INCREMENT,
+id_form int default 0 NOT NULL,
+id_status int default 0 NOT NULL,
+PRIMARY KEY (id_optional_status_indexation)
+);

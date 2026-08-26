@@ -44,6 +44,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexation;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexationHome;
+import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalStatusIndexation;
+import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalStatusIndexationHome;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormHome;
@@ -53,6 +55,9 @@ import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.plugins.forms.business.StepHome;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
+import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
+import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -80,18 +85,24 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     private static final String MARK_FORM_LIST = "form_list";
     private static final String MARK_FORM = "form";
     private static final String MARK_FORM_STEP_QUESTION_LIST = "form_step_question_list";
+    private static final String MARK_FORM_STATUS_LIST = "form_status_list";
     private static final String MARK_OPTIONAL_QUESTION_INDEXATION_LIST = "optional_question_indexation_list";
+    private static final String MARK_OPTIONAL_STATUS_INDEXATION_LIST = "optional_status_indexation_list";
 
     private static final String PROPERTY_PAGE_TITLE = "module.description";
     protected static final String MESSAGE_SUCCESS_SAVE = "module.elasticdata.forms.modify.save.success";
 
     private static final String PARAMETER_DATA_SOURCE = "data_source";
     private static final String PARAMETER_FORM_ID = "idForm";
+    private static final String PARAMETER_PREFIX_STATUS = "status";
 
     private static final long serialVersionUID = 1L;
     
     @Inject
     private Models _model;
+
+    @Inject
+    private IStateService _stateService;
 
     /**
      * View the home of the feature
@@ -138,9 +149,26 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
         }
 
         _model.put( MARK_OPTIONAL_QUESTION_INDEXATION_LIST, OptionalQuestionIndexationHome.getOptionalQuestionIndexationListByFormId( nIdFrom ) );
+        _model.put( MARK_OPTIONAL_STATUS_INDEXATION_LIST, OptionalStatusIndexationHome.getOptionalStatusIndexationListByFormId( nIdFrom ) );
         _model.put( MARK_FORM, form );
         _model.put( MARK_FORM_STEP_QUESTION_LIST, stepWithQuestionList );
+        _model.put( MARK_FORM_STATUS_LIST, getStateList( form.getIdWorkflow( ) ) );
         return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MODIFY_INDEXATION, _model );
+    }
+
+    /**
+     * Return the list of workflow states of a given workflow
+     * 
+     * @param nIdWorkflow
+     *            the workflow id
+     * @return the list of states
+     */
+    private List<State> getStateList( int nIdWorkflow )
+    {
+        StateFilter stateFilter = new StateFilter( );
+        stateFilter.setIdWorkflow( nIdWorkflow );
+
+        return _stateService.getListStateByFilter( stateFilter );
     }
 
     /**
@@ -194,6 +222,31 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
                 if ( optionalQuestionIndexation != null )
                 {
                     OptionalQuestionIndexationHome.remove( optionalQuestionIndexation.getId( ) );
+                }
+            }
+        }
+
+        Form form = FormHome.findByPrimaryKey( nIdFrom );
+        for ( State state : getStateList( form.getIdWorkflow( ) ) )
+        {
+            int nIdState = state.getId( );
+            String checkBoxValue = request.getParameter( PARAMETER_PREFIX_STATUS + nIdState );
+            OptionalStatusIndexation optionalStatusIndexation = OptionalStatusIndexationHome.findByStatusId( nIdState );
+            if ( checkBoxValue != null )
+            {
+                if ( optionalStatusIndexation == null )
+                {
+                    OptionalStatusIndexation newOptionalStatusIndexation = new OptionalStatusIndexation( );
+                    newOptionalStatusIndexation.setIdStatus( nIdState );
+                    newOptionalStatusIndexation.setIdForm( nIdFrom );
+                    OptionalStatusIndexationHome.create( newOptionalStatusIndexation );
+                }
+            }
+            else
+            {
+                if ( optionalStatusIndexation != null )
+                {
+                    OptionalStatusIndexationHome.remove( optionalStatusIndexation.getId( ) );
                 }
             }
         }
