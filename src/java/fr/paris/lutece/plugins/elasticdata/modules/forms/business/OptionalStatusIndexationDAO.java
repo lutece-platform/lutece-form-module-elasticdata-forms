@@ -54,14 +54,14 @@ import org.apache.commons.lang3.StringUtils;
 public final class OptionalStatusIndexationDAO extends AbstractFilterDao implements IOptionalStatusIndexationDAO
 {
     // Constants
-    private static final String SQL_QUERY_INSERT = "INSERT INTO workflowstatus_forms_optionalstatus ( id_form, id_status ) VALUES ( ?, ? ) ";
-    private static final String SQL_QUERY_DELETE = "DELETE FROM workflowstatus_forms_optionalstatus WHERE id_optional_status_indexation = ? ";
-    private static final String SQL_QUERY_UPDATE = "UPDATE workflowstatus_forms_optionalstatus SET id_form = ?, id_status = ? WHERE id_optional_status_indexation = ?";
+    private static final String SQL_QUERY_INSERT = "INSERT INTO elasticdata_forms_optionalstatus ( id_form, id_status ) VALUES ( ?, ? ) ";
+    private static final String SQL_QUERY_DELETE = "DELETE FROM elasticdata_forms_optionalstatus WHERE id_optional_status_indexation = ? ";
+    private static final String SQL_QUERY_UPDATE = "UPDATE elasticdata_forms_optionalstatus SET id_form = ?, id_status = ? WHERE id_optional_status_indexation = ?";
     
-	private static final String SQL_QUERY_SELECTALL = "SELECT id_optional_status_indexation, id_form, id_status FROM workflowstatus_forms_optionalstatus";
-    private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_optional_status_indexation FROM workflowstatus_forms_optionalstatus";
-    private static final String SQL_QUERY_SELECTALL_BY_FORM_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM workflowstatus_forms_optionalstatus where id_form = ?";
-    private static final String SQL_QUERY_SELECT_BY_STATUS_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM workflowstatus_forms_optionalstatus where id_status = ?";
+	private static final String SQL_QUERY_SELECTALL = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus";
+    private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_optional_status_indexation FROM elasticdata_forms_optionalstatus";
+    private static final String SQL_QUERY_SELECTALL_BY_FORM_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus where id_form = ?";
+    private static final String SQL_QUERY_SELECT_BY_STATUS_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus where id_status = ?";
 
     private static final String SQL_QUERY_SELECTALL_BY_IDS = SQL_QUERY_SELECTALL + " WHERE id_optional_status_indexation IN (  ";
 	private static final String SQL_QUERY_SELECT_BY_ID = SQL_QUERY_SELECTALL + " WHERE id_optional_status_indexation = ?";

@@ -14,8 +14,8 @@ id_question int default 0 NOT NULL,
 PRIMARY KEY (id_optional_question_indexation)
 );
 
-DROP TABLE IF EXISTS workflowstatus_forms_optionalstatus;
-CREATE TABLE workflowstatus_forms_optionalstatus (
+DROP TABLE IF EXISTS elasticdata_forms_optionalstatus;
+CREATE TABLE elasticdata_forms_optionalstatus (
 id_optional_status_indexation int AUTO_INCREMENT,
 id_form int default '0',
 id_status int default '0',
