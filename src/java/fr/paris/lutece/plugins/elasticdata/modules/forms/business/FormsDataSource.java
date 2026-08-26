@@ -110,7 +110,7 @@ public class FormsDataSource extends AbstractDataSource
     private static final String DOCUMENT_TYPE_NAME_FORM_RESPONSE_HISTORY = "formResponseHistory";
     private static final String RESSOURCE_TYPE = "FORMS_FORM_RESPONSE";
     private static final int SQL_MAX_SELECT_IN = 80;
-    private static final String MARK_FILE_URL_FILE_SERVICE = "fichierURLFileService";
+    private static final String SUFFIX_FILE_URL = ".fileUrl";
     Map<Integer, String> _mapFields = new HashMap<>( );
     
     public FormsDataSource( ){}
@@ -268,7 +268,9 @@ public class FormsDataSource extends AbstractDataSource
             {
                 formResponseDataObject.setWorkflowState( formResponseState.getName( ) );
 
-                if ( !optionalStatusIndexations.contains( formResponseState.getId( ) ) )
+                // An empty selection means "no status filtering" : every response is indexed.
+                // Filtering on an empty list would silently stop indexing the whole form.
+                if ( !optionalStatusIndexations.isEmpty( ) && !optionalStatusIndexations.contains( formResponseState.getId( ) ) )
                 {
                     continue;
                 }
@@ -482,15 +484,29 @@ public class FormsDataSource extends AbstractDataSource
                                 else
                                     if ( entryTypeService instanceof EntryTypeFile )
                                     {
-                                        formQuestionResponse.getEntryResponse( ).forEach( response -> {
+                                        List<String> fileNames = new ArrayList<>( );
+                                        List<String> fileUrls = new ArrayList<>( );
+
+                                        for ( Response response : formQuestionResponse.getEntryResponse( ) )
+                                        {
+                                            fileNames.add( response.getResponseValue( ) );
+
                                             if ( response.getFile( ) != null )
                                             {
-                                                UrlItem urlFileDownloadBO = new UrlItem( AppPathService.getProdUrl( StringUtils.EMPTY )
+                                                fileUrls.add( new UrlItem( AppPathService.getProdUrl( StringUtils.EMPTY )
                                                         + _fileService.getFileStoreServiceProvider( response.getFile( ).getOrigin( ) )
-                                                                .getFileDownloadUrlBO( response.getFile( ).getFileKey( ) ) );
-                                                userResponses.put( MARK_FILE_URL_FILE_SERVICE, urlFileDownloadBO.getUrl( ) );
+                                                                .getFileDownloadUrlBO( response.getFile( ).getFileKey( ) ) ).getUrl( ) );
                                             }
-                                        } );
+                                        }
+
+                                        // Keyed on the question, so that two file questions of the same form
+                                        // no longer overwrite each other.
+                                        userResponses.put( baseKey, fileNames );
+
+                                        if ( !fileUrls.isEmpty( ) )
+                                        {
+                                            userResponses.put( baseKey + SUFFIX_FILE_URL, fileUrls );
+                                        }
                                     }
                                     else
                                     {
