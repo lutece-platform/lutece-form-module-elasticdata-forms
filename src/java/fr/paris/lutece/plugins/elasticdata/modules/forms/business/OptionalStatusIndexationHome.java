@@ -108,15 +108,17 @@ public final class OptionalStatusIndexationHome
     }
 
     /**
-     * Returns an instance of a optionalStatusIndexation whose workflow status identifier is specified in parameter
+     * Returns the optionalStatusIndexation of a form for a workflow status: a workflow can be shared by several forms
      * 
+     * @param nFormId
+     *            The form identifier
      * @param nStatusId
      *            The workflow status identifier
      * @return an instance of OptionalStatusIndexation
      */
-    public static OptionalStatusIndexation findByStatusId( int nStatusId )
+    public static OptionalStatusIndexation findByFormIdAndStatusId( int nFormId, int nStatusId )
     {
-        return _dao.loadByStatusId( nStatusId, _plugin );
+        return _dao.loadByFormIdAndStatusId( nFormId, nStatusId, _plugin );
     }
 
     /**

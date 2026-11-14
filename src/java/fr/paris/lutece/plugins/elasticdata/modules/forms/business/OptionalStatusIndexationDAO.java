@@ -56,7 +56,7 @@ public final class OptionalStatusIndexationDAO implements IOptionalStatusIndexat
     private static final String SQL_QUERY_SELECTALL = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus";
     private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_optional_status_indexation FROM elasticdata_forms_optionalstatus";
     private static final String SQL_QUERY_SELECTALL_BY_FORM_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus WHERE id_form = ?";
-    private static final String SQL_QUERY_SELECT_BY_STATUS_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus WHERE id_status = ?";
+    private static final String SQL_QUERY_SELECT_BY_FORM_ID_AND_STATUS_ID = "SELECT id_optional_status_indexation, id_form, id_status FROM elasticdata_forms_optionalstatus WHERE id_form = ? AND id_status = ?";
 
     @Override
     public void insert( OptionalStatusIndexation optionalStatusIndexation, Plugin plugin )
@@ -96,13 +96,14 @@ public final class OptionalStatusIndexationDAO implements IOptionalStatusIndexat
     }
 
     @Override
-    public OptionalStatusIndexation loadByStatusId( int nStatusId, Plugin plugin )
+    public OptionalStatusIndexation loadByFormIdAndStatusId( int nFormId, int nStatusId, Plugin plugin )
     {
         OptionalStatusIndexation optionalStatusIndexation = null;
 
-        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_STATUS_ID, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_FORM_ID_AND_STATUS_ID, plugin ) )
         {
-            daoUtil.setInt( 1, nStatusId );
+            daoUtil.setInt( 1, nFormId );
+            daoUtil.setInt( 2, nStatusId );
             daoUtil.executeQuery( );
 
             if ( daoUtil.next( ) )

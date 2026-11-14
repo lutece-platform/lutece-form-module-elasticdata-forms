@@ -87,15 +87,17 @@ public interface IOptionalStatusIndexationDAO
     OptionalStatusIndexation load( int nKey, Plugin plugin );
 
     /**
-     * Load the data of the OptionalStatusIndexation associated to a workflow status
+     * Load the data of the OptionalStatusIndexation associated to a workflow status for a form
      * 
+     * @param nFormId
+     *            The identifier of the form
      * @param nStatusId
      *            The identifier of the workflow status
      * @param plugin
      *            the Plugin
      * @return The instance of the OptionalStatusIndexation
      */
-    OptionalStatusIndexation loadByStatusId( int nStatusId, Plugin plugin );
+    OptionalStatusIndexation loadByFormIdAndStatusId( int nFormId, int nStatusId, Plugin plugin );
 
     /**
      * Load the data of all the optionalStatusIndexation objects and returns them as a list

@@ -56,6 +56,7 @@ import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
 import fr.paris.lutece.plugins.workflowcore.service.workflow.IWorkflowService;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.security.SecurityTokenService;
 import fr.paris.lutece.test.AdminUserUtils;
 import fr.paris.lutece.test.LuteceTestCase;
 import fr.paris.lutece.test.mocks.MockHttpServletRequest;
@@ -63,8 +64,8 @@ import fr.paris.lutece.test.mocks.MockHttpServletResponse;
 import jakarta.inject.Inject;
 
 /**
- * Settings of the indexation of a form in the back office: the save action requires its security token and a missing
- * or unknown form opens the list of the forms.
+ * Settings of the indexation of a form in the back office: the save action requires its security token, a missing or
+ * unknown form opens the list of the forms, and the states of a workflow shared by two forms are saved for each form.
  */
 public class IndexElasticDataJspBeanTest extends LuteceTestCase
 {
@@ -76,6 +77,8 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
 
     @Inject
     private IndexElasticDataJspBean _bean;
+    @Inject
+    private SecurityTokenService _securityTokenService;
     @Inject
     private IWorkflowService _workflowService;
     @Inject
@@ -189,6 +192,52 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
             String strLocation = response._strLocation;
             assertTrue( strLocation != null && strLocation.contains( VIEW_MANAGE ), "idForm=" + strIdForm + " : " + strLocation );
         }
+    }
+
+    /**
+     * Two forms share a workflow: the states selected for one form are saved for this form only, and saving the other
+     * form leaves them unchanged
+     *
+     * @throws AccessDeniedException
+     *             if a save is refused
+     */
+    @Test
+    public void testStatesOfASharedWorkflowAreSavedForEachForm( ) throws AccessDeniedException
+    {
+        save( _formA, true );
+        save( _formB, true );
+
+        assertEquals( List.of( _state.getId( ) ), savedStates( _formA ) );
+        assertEquals( List.of( _state.getId( ) ), savedStates( _formB ) );
+
+        save( _formB, false );
+
+        assertEquals( List.of( _state.getId( ) ), savedStates( _formA ) );
+        assertTrue( savedStates( _formB ).isEmpty( ) );
+    }
+
+    /**
+     * Posts the settings of a form, with the state of the workflow checked or not
+     *
+     * @param form
+     *            the form
+     * @param bStateChecked
+     *            true to check the state
+     * @throws AccessDeniedException
+     *             if the save is refused
+     */
+    private void save( Form form, boolean bStateChecked ) throws AccessDeniedException
+    {
+        MockHttpServletRequest request = newRequest( );
+        request.setMethod( "POST" );
+        request.addParameter( "action", ACTION_MODIFY );
+        request.addParameter( PARAMETER_ID_FORM, String.valueOf( form.getId( ) ) );
+        request.addParameter( "token", _securityTokenService.getToken( request, ACTION_MODIFY ) );
+        if ( bStateChecked )
+        {
+            request.addParameter( "status" + _state.getId( ), String.valueOf( _state.getId( ) ) );
+        }
+        _bean.processController( request, new MockHttpServletResponse( ) );
     }
 
     private List<Integer> savedStates( Form form )

@@ -255,7 +255,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
         {
             int nIdState = state.getId( );
             String checkBoxValue = request.getParameter( PARAMETER_PREFIX_STATUS + nIdState );
-            OptionalStatusIndexation optionalStatusIndexation = OptionalStatusIndexationHome.findByStatusId( nIdState );
+            OptionalStatusIndexation optionalStatusIndexation = OptionalStatusIndexationHome.findByFormIdAndStatusId( nIdFrom, nIdState );
             if ( checkBoxValue != null )
             {
                 if ( optionalStatusIndexation == null )
