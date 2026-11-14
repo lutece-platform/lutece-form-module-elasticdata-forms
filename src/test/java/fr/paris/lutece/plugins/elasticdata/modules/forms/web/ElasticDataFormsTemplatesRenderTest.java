@@ -166,6 +166,28 @@ public class ElasticDataFormsTemplatesRenderTest
     }
 
     /**
+     * A form without description (the column accepts NULL) is listed with an empty description cell.
+     *
+     * @throws Exception
+     *             if the rendering fails
+     */
+    @Test
+    public void testManageListsAFormWithoutDescription( ) throws Exception
+    {
+        Form form = form( );
+        form.setDescription( null );
+        List<Form> listForms = new ArrayList<>( );
+        listForms.add( form );
+        Map<String, Object> model = new HashMap<>( );
+        model.put( "form_list", listForms );
+
+        String strHtml = render( TEMPLATE_MANAGE, model );
+
+        assertTrue( strHtml.contains( TITLE_ESCAPED ), strHtml );
+        assertTrue( strHtml.contains( "idForm=1234\"" ), strHtml );
+    }
+
+    /**
      * The selection page writes the titles of the form, its steps, its questions and the names of the states as text,
      * and checks the boxes of the selection already saved.
      *
