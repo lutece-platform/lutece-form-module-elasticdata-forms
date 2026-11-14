@@ -63,13 +63,15 @@ import fr.paris.lutece.test.mocks.MockHttpServletResponse;
 import jakarta.inject.Inject;
 
 /**
- * Settings of the indexation of a form in the back office: the save action requires its security token.
+ * Settings of the indexation of a form in the back office: the save action requires its security token and a missing
+ * or unknown form opens the list of the forms.
  */
 public class IndexElasticDataJspBeanTest extends LuteceTestCase
 {
     private static final String RIGHT = "ELASTICDATA_FORMS_MANAGEMENT";
     private static final String PARAMETER_ID_FORM = "idForm";
     private static final String ACTION_MODIFY = "modifyFormIndexation";
+    private static final String VIEW_MANAGE = "view=manageFormsIndexation";
     private static final Pattern TOKEN_FIELD = Pattern.compile( "name=\"token\"[^>]*value=\"([^\"]+)\"" );
 
     @Inject
@@ -161,6 +163,34 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
         assertTrue( savedStates( _formA ).isEmpty( ) );
     }
 
+    /**
+     * Without a form id, with an id that is not a number or with the id of no form, the settings view opens the list of
+     * the forms
+     *
+     * @throws AccessDeniedException
+     *             if the view is refused
+     */
+    @Test
+    public void testModifyViewWithoutValidFormOpensTheList( ) throws AccessDeniedException
+    {
+        for ( String strIdForm : new String [ ] {
+                null, "", "abc", "999999"
+        } )
+        {
+            MockHttpServletRequest request = newRequest( );
+            request.addParameter( "view", ACTION_MODIFY );
+            if ( strIdForm != null )
+            {
+                request.addParameter( PARAMETER_ID_FORM, strIdForm );
+            }
+            RedirectResponse response = new RedirectResponse( );
+            _bean.processController( request, response );
+
+            String strLocation = response._strLocation;
+            assertTrue( strLocation != null && strLocation.contains( VIEW_MANAGE ), "idForm=" + strIdForm + " : " + strLocation );
+        }
+    }
+
     private List<Integer> savedStates( Form form )
     {
         return OptionalStatusIndexationHome.getOptionalStatusIndexationListByFormId( form.getId( ) ).stream( )
@@ -185,5 +215,19 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
         AdminUserUtils.registerAdminUserWithRight( request, new AdminUser( ), RIGHT );
 
         return request;
+    }
+
+    /**
+     * A response that keeps the URL of the redirect
+     */
+    private static final class RedirectResponse extends MockHttpServletResponse
+    {
+        private String _strLocation;
+
+        @Override
+        public void sendRedirect( String strLocation )
+        {
+            _strLocation = strLocation;
+        }
     }
 }

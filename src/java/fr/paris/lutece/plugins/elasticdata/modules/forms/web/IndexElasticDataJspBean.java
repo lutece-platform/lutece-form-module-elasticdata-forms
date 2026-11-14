@@ -41,6 +41,9 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.math.NumberUtils;
+
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexation;
 import fr.paris.lutece.plugins.elasticdata.modules.forms.business.OptionalQuestionIndexationHome;
@@ -93,6 +96,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
 
     private static final String PROPERTY_PAGE_TITLE = "module.description";
     protected static final String MESSAGE_SUCCESS_SAVE = "module.elasticdata.forms.modify.save.success";
+    private static final String MESSAGE_ERROR_FORM_NOT_FOUND = "module.elasticdata.forms.modify.error.formNotFound";
 
     private static final String PARAMETER_DATA_SOURCE = "data_source";
     private static final String PARAMETER_FORM_ID = "idForm";
@@ -128,15 +132,19 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * 
      * @param request
      *            The HTTP request
-     * @return The page
+     * @return The page, or the list of the forms if the form is missing or unknown
      */
     @View( value = VIEW_MODIFY_FORM_INDEXATION )
     public String getModifyFormIndexation( HttpServletRequest request )
     {
-        String strIdForm = request.getParameter( PARAMETER_FORM_ID );
-        int nIdFrom = Integer.valueOf( strIdForm );
-        LinkedHashMap<Step, List<Question>> stepWithQuestionList = new LinkedHashMap<>( );
+        int nIdFrom = NumberUtils.toInt( request.getParameter( PARAMETER_FORM_ID ), -1 );
         Form form = FormHome.findByPrimaryKey( nIdFrom );
+        if ( form == null )
+        {
+            addError( MESSAGE_ERROR_FORM_NOT_FOUND, getLocale( ) );
+            return redirectView( request, VIEW_MANAGE_FORMS_INDEXATION );
+        }
+        LinkedHashMap<Step, List<Question>> stepWithQuestionList = new LinkedHashMap<>( );
         List<Question> questionList = QuestionHome.getListQuestionByIdForm( nIdFrom );
         List<Step> stepList = StepHome.getStepsListByForm( nIdFrom );
 
@@ -211,8 +219,13 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
             throw new AccessDeniedException( ERROR_INVALID_TOKEN );
         }
 
-        String strIdForm = request.getParameter( PARAMETER_FORM_ID );
-        int nIdFrom = Integer.valueOf( strIdForm );
+        int nIdFrom = NumberUtils.toInt( request.getParameter( PARAMETER_FORM_ID ), -1 );
+        Form form = FormHome.findByPrimaryKey( nIdFrom );
+        if ( form == null )
+        {
+            addError( MESSAGE_ERROR_FORM_NOT_FOUND, getLocale( ) );
+            return redirectView( request, VIEW_MANAGE_FORMS_INDEXATION );
+        }
         List<Question> questionList = QuestionHome.getListQuestionByIdForm( nIdFrom );
         for ( Question question : questionList )
         {
@@ -238,7 +251,6 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
             }
         }
 
-        Form form = FormHome.findByPrimaryKey( nIdFrom );
         for ( State state : getStateList( form.getIdWorkflow( ) ) )
         {
             int nIdState = state.getId( );
