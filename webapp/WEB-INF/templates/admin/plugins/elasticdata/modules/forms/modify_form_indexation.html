@@ -10,7 +10,7 @@
                     <#list questionList as question>
                         <#assign checkedValue=getCheckedValue( question.id )>
                             <@btnGroupRadioCheckbox type='checkbox' color='default' name='${question.id}'
-                                id='${question.id}' value='${question.id}' labelParams='' labelFor='${question.id}'
+                                id='${question.id}' value='${question.id}' labelParams={} labelFor='${question.id}'
                                 labelKey=' ${question.title}' checked=checkedValue />
                     </#list>
                 </@formGroup>
@@ -19,7 +19,7 @@
                 <#list form_status_list as status>
                     <#assign checkedValueStatus=getCheckedValueStatus( status.id )>
                         <@btnGroupRadioCheckbox type='checkbox' color='default' name='status${status.id}'
-                            id='status${status.id}' value='${status.id}' labelParams='' labelFor='status${status.id}'
+                            id='status${status.id}' value='${status.id}' labelParams={} labelFor='status${status.id}'
                             labelKey=' ${status.name}' checked=checkedValueStatus />
                 </#list>
             </@formGroup>
