@@ -1,13 +1,13 @@
 <@box>
-    <@boxHeader title='#i18n{module.elasticdata.forms.manage_forms.title}' boxTools=false>
+    <@boxHeader title='#i18n{module.elasticdata.forms.manage_forms.title}' titleLevel='h1' boxTools=false>
     </@boxHeader>
     <@boxBody>
         <@messages infos=infos />
         <@table>
             <tr>
-                <th>#i18n{module.elasticdata.forms.manage_forms.columnTitle}</th>
-                <th>#i18n{module.elasticdata.forms.manage_forms.columnDescription}</th>
-                <th>#i18n{portal.util.labelActions}</th>
+                <th scope="col">#i18n{module.elasticdata.forms.manage_forms.columnTitle}</th>
+                <th scope="col">#i18n{module.elasticdata.forms.manage_forms.columnDescription}</th>
+                <th scope="col">#i18n{portal.util.labelActions}</th>
             </tr>
             <@tableHeadBodySeparator />
             <#list form_list as form>
@@ -21,7 +21,8 @@
                     <td>
                         <@aButton
                             href='jsp/admin/plugins/elasticdata/modules/forms/IndexingAppElasticData.jsp?view=modifyFormIndexation&idForm=${form.id}'
-                            buttonIcon='pencil' />
+                            buttonIcon='pencil' title='#i18n{portal.util.labelModify}' hideTitle=['all']
+                            params={'aria-label': '#i18n{portal.util.labelModify} ' + form.title} />
                     </td>
                 </tr>
             </#list>

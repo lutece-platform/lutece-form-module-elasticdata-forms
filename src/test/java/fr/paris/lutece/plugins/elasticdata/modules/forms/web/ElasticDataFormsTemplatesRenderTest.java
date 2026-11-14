@@ -64,9 +64,10 @@ import freemarker.template.TemplateException;
 /**
  * Renders the elasticdata-forms back office pages with HTML auto-escaping (LUT-33153): the titles and descriptions of
  * the forms, the titles of their steps and questions and the names of the workflow states are text typed by an
- * administrator, written once escaped; the selection already saved checks its boxes. The core macros the templates call
- * are replaced by stand-ins that write their arguments (escaped) and their nested content: only the FreeMarker engine is
- * needed.
+ * administrator, written once escaped; the edit button of a form is named after it; the checkboxes of a step and the
+ * checkboxes of the states are grouped under a legend; the selection already saved checks its boxes. The core macros
+ * the templates call are replaced by stand-ins that write their arguments (escaped) and their nested content: only the
+ * FreeMarker engine is needed.
  */
 public class ElasticDataFormsTemplatesRenderTest
 {
@@ -80,10 +81,10 @@ public class ElasticDataFormsTemplatesRenderTest
             + "<#macro boxHeader title='' rest...><h2>${title}</h2><#nested></#macro>"
             + "<#macro messages infos=[] rest...></#macro>"
             + "<#macro table rest...><table><#nested></table></#macro><#macro tableHeadBodySeparator rest...></#macro>"
-            + "<#macro aButton href='' title='' rest...><a href=\"${href}\">${title}</a></#macro>"
+            + "<#macro aButton href='' title='' params={} rest...><a href=\"${href}\"<#list params as key, param> ${key}=\"${param}\"</#list>>${title}</a></#macro>"
             + "<#macro tform action='' rest...><form action=\"${action}\"><#nested></form></#macro>"
             + "<#macro input name='' value='' rest...><input name=\"${name}\" value=\"${value}\"></#macro>"
-            + "<#macro formGroup labelKey='' rest...><fieldset><legend>${labelKey}</legend><#nested></fieldset></#macro>"
+            + "<#macro fieldSet legend='' rest...><fieldset><legend>${legend}</legend><#nested></fieldset></#macro>"
             + "<#macro btnGroupRadioCheckbox name='' value='' labelKey='' labelParams={} checked=false rest...>"
             + "<#if !labelParams?is_hash><#stop 'labelParams is not a map'></#if>"
             + "<label><input type=\"checkbox\" name=\"${name}\" value=\"${value}\"<#if checked> checked</#if>>${labelKey}</label></#macro>"
@@ -159,6 +160,7 @@ public class ElasticDataFormsTemplatesRenderTest
         assertTrue( strHtml.contains( TITLE_ESCAPED ), strHtml );
         assertTrue( strHtml.contains( "Desc &lt;i&gt;d&lt;/i&gt;" ), strHtml );
         assertTrue( strHtml.contains( "view=modifyFormIndexation&amp;idForm=1234\"" ), strHtml );
+        assertTrue( strHtml.contains( "aria-label=\"#i18n{portal.util.labelModify} " + TITLE_ESCAPED + "\"" ), strHtml );
         assertFalse( strHtml.contains( "<b>" ), strHtml );
         assertFalse( strHtml.contains( "&amp;lt;" ), strHtml );
     }
@@ -204,7 +206,8 @@ public class ElasticDataFormsTemplatesRenderTest
         String strHtml = render( TEMPLATE_MODIFY, model );
 
         assertTrue( strHtml.contains( "<h2>" + TITLE_ESCAPED + " - " ), strHtml );
-        assertTrue( strHtml.contains( "Step &lt;u&gt;1&lt;/u&gt;" ), strHtml );
+        assertTrue( strHtml.contains( "<legend>Step &lt;u&gt;1&lt;/u&gt;</legend>" ), strHtml );
+        assertTrue( strHtml.contains( "<legend>#i18n{module.elasticdata.forms.modify_form.status}</legend>" ), strHtml );
         assertTrue( strHtml.contains( "Name &amp; &lt;em&gt;surname&lt;/em&gt;" ), strHtml );
         assertTrue( strHtml.contains( "Done &lt;s&gt;ok&lt;/s&gt;" ), strHtml );
         assertTrue( strHtml.contains( "name=\"idForm\" value=\"1234\"" ), strHtml );
