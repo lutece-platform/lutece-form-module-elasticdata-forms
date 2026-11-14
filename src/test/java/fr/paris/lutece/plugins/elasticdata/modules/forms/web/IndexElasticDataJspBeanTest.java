@@ -167,6 +167,20 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
     }
 
     /**
+     * Without the security token, the full indexation is refused before the data source is read
+     */
+    @Test
+    public void testIndexRefusedWithoutToken( )
+    {
+        MockHttpServletRequest request = newRequest( );
+        request.setMethod( "POST" );
+        request.addParameter( "action", "index" );
+        request.addParameter( "data_source", "IndexElasticDataJspBeanTest" );
+
+        assertThrows( AccessDeniedException.class, ( ) -> _bean.processController( request, new MockHttpServletResponse( ) ) );
+    }
+
+    /**
      * Without a form id, with an id that is not a number or with the id of no form, the settings view opens the list of
      * the forms
      *

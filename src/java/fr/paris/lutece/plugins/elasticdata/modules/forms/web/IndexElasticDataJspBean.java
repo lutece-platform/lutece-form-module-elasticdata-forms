@@ -190,10 +190,17 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * @param request
      *            The HTTP request
      * @return The redirected page
+     * @throws AccessDeniedException
+     *             if the security token is missing or invalid
      */
     @Action( ACTION_INDEX )
-    public String doIndex( HttpServletRequest request )
+    public String doIndex( HttpServletRequest request ) throws AccessDeniedException
     {
+        if ( !getSecurityTokenService( ).validate( request, ACTION_INDEX ) )
+        {
+            throw new AccessDeniedException( ERROR_INVALID_TOKEN );
+        }
+
         StringBuilder sbLogs = new StringBuilder( );
         String strDataSourceId = request.getParameter( PARAMETER_DATA_SOURCE );
         DataSource source = DataSourceService.getDataSource( strDataSourceId );
