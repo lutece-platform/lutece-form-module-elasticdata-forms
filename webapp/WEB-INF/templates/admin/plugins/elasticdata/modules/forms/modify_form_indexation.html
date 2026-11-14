@@ -5,6 +5,7 @@
         <@messages infos=infos />
         <@tform name='create_localuser' action='jsp/admin/plugins/elasticdata/modules/forms/IndexingAppElasticData.jsp'>
             <@input type="hidden" id="idForm" name="idForm" value="${form.id}" />
+            <@input type="hidden" name="token" value="${token}" />
             <#list form_step_question_list as step, questionList>
                 <@fieldSet legend=step.title legendClass='form-label'>
                     <#list questionList as question>

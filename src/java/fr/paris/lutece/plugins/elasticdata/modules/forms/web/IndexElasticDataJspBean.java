@@ -58,7 +58,9 @@ import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
+import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.security.SecurityTokenService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -95,6 +97,8 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     private static final String PARAMETER_DATA_SOURCE = "data_source";
     private static final String PARAMETER_FORM_ID = "idForm";
     private static final String PARAMETER_PREFIX_STATUS = "status";
+
+    private static final String ERROR_INVALID_TOKEN = "Invalid security token";
 
     private static final long serialVersionUID = 1L;
     
@@ -153,6 +157,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
         _model.put( MARK_FORM, form );
         _model.put( MARK_FORM_STEP_QUESTION_LIST, stepWithQuestionList );
         _model.put( MARK_FORM_STATUS_LIST, getStateList( form.getIdWorkflow( ) ) );
+        _model.put( SecurityTokenService.MARK_TOKEN, getSecurityTokenService( ).getToken( request, ACTION_MODIFY_FORM_INDEXATION ) );
         return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MODIFY_INDEXATION, _model );
     }
 
@@ -195,10 +200,17 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * @param request
      *            The HTTP request
      * @return The redirected page
+     * @throws AccessDeniedException
+     *             if the security token is missing or invalid
      */
     @Action( ACTION_MODIFY_FORM_INDEXATION )
-    public String doModifyFormIndexation( HttpServletRequest request )
+    public String doModifyFormIndexation( HttpServletRequest request ) throws AccessDeniedException
     {
+        if ( !getSecurityTokenService( ).validate( request, ACTION_MODIFY_FORM_INDEXATION ) )
+        {
+            throw new AccessDeniedException( ERROR_INVALID_TOKEN );
+        }
+
         String strIdForm = request.getParameter( PARAMETER_FORM_ID );
         int nIdFrom = Integer.valueOf( strIdForm );
         List<Question> questionList = QuestionHome.getListQuestionByIdForm( nIdFrom );

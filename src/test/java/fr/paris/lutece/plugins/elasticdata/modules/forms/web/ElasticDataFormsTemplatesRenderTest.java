@@ -224,6 +224,7 @@ public class ElasticDataFormsTemplatesRenderTest
         model.put( "form_status_list", List.of( state ) );
         model.put( "optional_question_indexation_list", List.of( optionalQuestion ) );
         model.put( "optional_status_indexation_list", List.of( optionalStatus ) );
+        model.put( "token", "tk" );
 
         String strHtml = render( TEMPLATE_MODIFY, model );
 
@@ -233,6 +234,7 @@ public class ElasticDataFormsTemplatesRenderTest
         assertTrue( strHtml.contains( "Name &amp; &lt;em&gt;surname&lt;/em&gt;" ), strHtml );
         assertTrue( strHtml.contains( "Done &lt;s&gt;ok&lt;/s&gt;" ), strHtml );
         assertTrue( strHtml.contains( "name=\"idForm\" value=\"1234\"" ), strHtml );
+        assertTrue( strHtml.contains( "name=\"token\" value=\"tk\"" ), strHtml );
         assertTrue( strHtml.contains( "name=\"1001\" value=\"1001\" checked>" ), strHtml );
         assertTrue( strHtml.contains( "name=\"1002\" value=\"1002\">" ), strHtml );
         assertTrue( strHtml.contains( "name=\"status2001\" value=\"2001\" checked>" ), strHtml );
