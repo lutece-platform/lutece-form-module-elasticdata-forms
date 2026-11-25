@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.forms.web;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,9 +62,11 @@ import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.security.SecurityTokenService;
+import fr.paris.lutece.portal.service.workgroup.AdminWorkgroupService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -122,7 +125,8 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_FORMS_INDEXATION, defaultView = true )
     public String getManageFromsIndexation( HttpServletRequest request )
     {
-        List<Form> listForms = FormHome.getFormList( );
+        // only the forms of the workgroups of the user, as in the forms plugin
+        List<Form> listForms = new ArrayList<>( AdminWorkgroupService.getAuthorizedCollection( FormHome.getFormList( ), (User) getUser( ) ) );
         _model.put( MARK_FORM_LIST, listForms );
         return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MANAGE_FORMS_INDEXATION, _model );
     }
@@ -135,7 +139,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      * @return The page, or the list of the forms if the form is missing or unknown
      */
     @View( value = VIEW_MODIFY_FORM_INDEXATION )
-    public String getModifyFormIndexation( HttpServletRequest request )
+    public String getModifyFormIndexation( HttpServletRequest request ) throws AccessDeniedException
     {
         int nIdFrom = NumberUtils.toInt( request.getParameter( PARAMETER_FORM_ID ), -1 );
         Form form = FormHome.findByPrimaryKey( nIdFrom );
@@ -144,6 +148,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
             addError( MESSAGE_ERROR_FORM_NOT_FOUND, getLocale( ) );
             return redirectView( request, VIEW_MANAGE_FORMS_INDEXATION );
         }
+        checkWorkgroup( form );
         LinkedHashMap<Step, List<Question>> stepWithQuestionList = new LinkedHashMap<>( );
         List<Question> questionList = QuestionHome.getListQuestionByIdForm( nIdFrom );
         List<Step> stepList = StepHome.getStepsListByForm( nIdFrom );
@@ -167,6 +172,22 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
         _model.put( MARK_FORM_STATUS_LIST, getStateList( form.getIdWorkflow( ) ) );
         _model.put( SecurityTokenService.MARK_TOKEN, getSecurityTokenService( ).getToken( request, ACTION_MODIFY_FORM_INDEXATION ) );
         return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_MODIFY_INDEXATION, _model );
+    }
+
+    /**
+     * Checks that the form belongs to a workgroup of the user, as the forms plugin does for its own screens
+     *
+     * @param form
+     *            the form
+     * @throws AccessDeniedException
+     *             if the form belongs to another workgroup
+     */
+    private void checkWorkgroup( Form form ) throws AccessDeniedException
+    {
+        if ( !AdminWorkgroupService.isAuthorized( form, (User) getUser( ) ) )
+        {
+            throw new AccessDeniedException( "The form " + form.getId( ) + " belongs to a workgroup of another user" );
+        }
     }
 
     /**
@@ -233,6 +254,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
             addError( MESSAGE_ERROR_FORM_NOT_FOUND, getLocale( ) );
             return redirectView( request, VIEW_MANAGE_FORMS_INDEXATION );
         }
+        checkWorkgroup( form );
         List<Question> questionList = QuestionHome.getListQuestionByIdForm( nIdFrom );
         for ( Question question : questionList )
         {

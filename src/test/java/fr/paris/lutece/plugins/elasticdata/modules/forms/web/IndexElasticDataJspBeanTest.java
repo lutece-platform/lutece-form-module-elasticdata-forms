@@ -88,6 +88,7 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
     private State _state;
     private Form _formA;
     private Form _formB;
+    private Form _formOtherWorkgroup;
 
     @BeforeEach
     protected void createForms( )
@@ -111,12 +112,15 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
 
         _formA = createForm( "A" );
         _formB = createForm( "B" );
+        _formOtherWorkgroup = createForm( "IndexElasticDataJspBeanTest other workgroup" );
+        _formOtherWorkgroup.setWorkgroup( "e2e_wg_not_of_the_user" );
+        FormHome.update( _formOtherWorkgroup );
     }
 
     @AfterEach
     protected void removeForms( )
     {
-        for ( Form form : List.of( _formA, _formB ) )
+        for ( Form form : List.of( _formA, _formB, _formOtherWorkgroup ) )
         {
             OptionalStatusIndexationHome.getOptionalStatusIndexationListByFormId( form.getId( ) )
                     .forEach( optionalStatus -> OptionalStatusIndexationHome.remove( optionalStatus.getId( ) ) );
@@ -228,6 +232,38 @@ public class IndexElasticDataJspBeanTest extends LuteceTestCase
 
         assertEquals( List.of( _state.getId( ) ), savedStates( _formA ) );
         assertTrue( savedStates( _formB ).isEmpty( ) );
+    }
+
+    /**
+     * The list of the forms only shows the forms of the workgroups of the user, as the forms plugin does
+     */
+    @Test
+    public void testListHidesTheFormsOfOtherWorkgroups( )
+    {
+        String strHtml = _bean.getManageFromsIndexation( newRequest( ) );
+
+        assertTrue( !strHtml.contains( _formOtherWorkgroup.getTitle( ) ), strHtml );
+    }
+
+    /**
+     * The settings of a form of another workgroup can be neither read nor saved
+     */
+    @Test
+    public void testSettingsOfAnotherWorkgroupAreRefused( )
+    {
+        MockHttpServletRequest request = newRequest( );
+        request.addParameter( "view", ACTION_MODIFY );
+        request.addParameter( PARAMETER_ID_FORM, String.valueOf( _formOtherWorkgroup.getId( ) ) );
+        assertThrows( AccessDeniedException.class, ( ) -> _bean.processController( request, new MockHttpServletResponse( ) ) );
+
+        MockHttpServletRequest post = newRequest( );
+        post.setMethod( "POST" );
+        post.addParameter( "action", ACTION_MODIFY );
+        post.addParameter( PARAMETER_ID_FORM, String.valueOf( _formOtherWorkgroup.getId( ) ) );
+        post.addParameter( "token", _securityTokenService.getToken( post, ACTION_MODIFY ) );
+        post.addParameter( "status" + _state.getId( ), String.valueOf( _state.getId( ) ) );
+        assertThrows( AccessDeniedException.class, ( ) -> _bean.processController( post, new MockHttpServletResponse( ) ) );
+        assertTrue( savedStates( _formOtherWorkgroup ).isEmpty( ) );
     }
 
     /**
