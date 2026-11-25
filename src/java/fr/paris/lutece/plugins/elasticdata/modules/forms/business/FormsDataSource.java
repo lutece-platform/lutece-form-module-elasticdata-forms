@@ -136,7 +136,9 @@ public class FormsDataSource extends AbstractDataSource
         {
             futures.add( _managedExecutor.submit( ( ) -> {
                 List<FormResponse> listFormResponses = FormResponseHome.selectAllFormResponsesUncompleteByIdForm( form.getId( ) );
-                return listFormResponses.stream( ).map( FormResponse::getId ).distinct( ).collect( Collectors.toList( ) );
+                // a draft (front office « save for later », from_save) is not a submitted response
+                return listFormResponses.stream( ).filter( response -> !response.isFromSave( ) ).map( FormResponse::getId ).distinct( )
+                        .collect( Collectors.toList( ) );
             } ) );
         }
 
@@ -174,7 +176,8 @@ public class FormsDataSource extends AbstractDataSource
         {
             futures.add( _managedExecutor.submit( ( ) -> {
                 List<Integer> listIdFormResponse = e.getValue( ).stream( ).map( x -> Integer.valueOf( x ) ).collect( Collectors.toList( ) );
-                List<FormResponse> formResponseList = FormResponseHome.getFormResponseUncompleteByPrimaryKeyList( listIdFormResponse );
+                List<FormResponse> formResponseList = FormResponseHome.getFormResponseUncompleteByPrimaryKeyList( listIdFormResponse ).stream( )
+                        .filter( response -> !response.isFromSave( ) ).collect( Collectors.toList( ) );
                 List<FormQuestionResponse> listFormQuestionResponse = FormQuestionResponseHome
                         .getFormQuestionResponseListByFormResponseList( listIdFormResponse );
                 List<List<FormResponse>> listFormFormResponse = formResponseList.stream( )
