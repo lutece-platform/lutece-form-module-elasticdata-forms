@@ -60,7 +60,7 @@ import fr.paris.lutece.plugins.forms.business.StepHome;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryHome;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
-import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
+import fr.paris.lutece.plugins.elasticdata.modules.forms.service.FormWorkflowService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
 import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
@@ -199,10 +199,7 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
      */
     private List<State> getStateList( int nIdWorkflow )
     {
-        StateFilter stateFilter = new StateFilter( );
-        stateFilter.setIdWorkflow( nIdWorkflow );
-
-        return _stateService.getListStateByFilter( stateFilter );
+        return FormWorkflowService.getStateList( _stateService, nIdWorkflow );
     }
 
     /**

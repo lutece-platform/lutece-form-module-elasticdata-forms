@@ -56,11 +56,10 @@ import fr.paris.lutece.plugins.genericattributes.service.entrytype.EntryTypeServ
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
 import fr.paris.lutece.plugins.genericattributes.util.GenericAttributesUtils;
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
-import fr.paris.lutece.plugins.workflowcore.business.action.ActionFilter;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
 import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistoryFilter;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
-import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
+import fr.paris.lutece.plugins.elasticdata.modules.forms.service.FormWorkflowService;
 import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
@@ -265,7 +264,8 @@ public class FormsDataSource extends AbstractDataSource
             formResponseDataObject.setParentName( form.getTitle( ) );
             formResponseDataObject.setDocumentTypeName( DOCUMENT_TYPE_NAME_FORM_RESPONSE );
 
-            State formResponseState = _stateService.findByResource( formResponseId, RESSOURCE_TYPE, nIdWorkflow );
+            State formResponseState = FormWorkflowService.hasWorkflow( nIdWorkflow ) ? _stateService.findByResource( formResponseId, RESSOURCE_TYPE, nIdWorkflow )
+                    : null;
 
             if ( formResponseState != null )
             {
@@ -407,9 +407,7 @@ public class FormsDataSource extends AbstractDataSource
      */
     private List<State> getStateList( int nIdWorkflow )
     {
-        StateFilter stateFilter = new StateFilter( );
-        stateFilter.setIdWorkflow( nIdWorkflow );
-        return _stateService.getListStateByFilter( stateFilter );
+        return FormWorkflowService.getStateList( _stateService, nIdWorkflow );
     }
 
     /**
@@ -421,10 +419,7 @@ public class FormsDataSource extends AbstractDataSource
      */
     private List<Action> getActionList( int nIdWorkflow )
     {
-        ActionFilter actionFilter = new ActionFilter( );
-        actionFilter.setIdWorkflow( nIdWorkflow );
-        actionFilter.setAutomaticReflexiveAction( false );
-        return _actionService.getListActionByFilter( actionFilter );
+        return FormWorkflowService.getActionList( _actionService, nIdWorkflow );
     }
 
     /**
